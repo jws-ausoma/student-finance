@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>AUSOMA · Clinicals</title>
+<style>
+:root {
+  --bg:#f6f7f9; --panel:#ffffff; --ink:#1a2333; --muted:#5b6677; --border:#e3e6ec;
+  --brand:#0b3d91; --brand-2:#1d6fb8; --accent:#f0a500;
+  --sev-high:#dc2626; --sev-med:#d97706; --sev-low:#6b7280;
+  --pos:#059669; --neg:#dc2626;
+}
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; background:var(--bg); color:var(--ink);
+  font:14px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+header.topbar { background:var(--brand); color:white; padding:12px 22px;
+  display:flex; align-items:center; gap:18px; }
+header.topbar h1 { margin:0; font-size:18px; font-weight:600; letter-spacing:.2px; }
+header.topbar .meta { margin-left:auto; font-size:12px; opacity:.85; }
+nav.tabs { background:#0a3478; padding:8px 22px 0; display:flex; gap:4px;
+  border-bottom:3px solid var(--accent); align-items:flex-end; flex-wrap:wrap; }
+nav.tabs a { display:inline-block; color:#dde6f5; background:#15417f;
+  text-decoration:none; padding:8px 18px 9px; font-size:13px; font-weight:600;
+  border:1px solid #1c4a8d; border-bottom:none; border-radius:9px 9px 0 0;
+  margin-bottom:-3px; line-height:1.2; transition:background .15s, color .15s; }
+nav.tabs a:hover { color:#fff; background:#1d4f99; }
+nav.tabs a.active { color:#0a3478; background:var(--accent); border-color:var(--accent);
+  font-weight:700; padding-bottom:12px; box-shadow:0 -1px 4px rgba(0,0,0,.08); }
+.kpi { display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:6px;
+  padding:10px 22px; background:#fff; border-bottom:1px solid var(--border); }
+.kpi .card { background:#fbfcfe; border:1.5px solid var(--brand); border-radius:6px;
+  padding:8px 12px; box-shadow:0 1px 2px rgba(11,61,145,.06); }
+/* Journey-style stage header — mirrors AUSOMA Student Journey card layout.
+   4 cards: Enrolled + Basic Sciences (PreMed+MD1-5) + Pre-Clinicals + Clinicals. */
+.journey { display:grid; grid-template-columns: repeat(4, 1fr); gap:8px;
+  padding:8px 22px 6px 22px; background:#fff; border-bottom:1px solid var(--border); }
+@media (max-width: 1000px) { .journey { grid-template-columns: repeat(2, 1fr); } }
+.journey .pcard { background:#fbfcfe; border:1.5px solid var(--brand); border-radius:6px;
+  padding:6px 10px; box-shadow:0 1px 2px rgba(11,61,145,.06); }
+.journey .pcard.enrolled  { border-color:#0a3478; background:#eef4ff; }
+.journey .pcard.stage-PreMed   { border-color:#cdd9f5; background:#f7f9ff; }
+.journey .pcard.stage-BasicSc  { border-color:#a8d8ea; background:#f7fcff; }
+.journey .pcard.stage-PreClin  { border-color:#e6c87a; background:#fffaf0; }
+.journey .pcard.stage-Clinicals{ border-color:#b6e3c1; background:#f7fff9; }
+.journey .pcard.stage-Exited   { border-color:#f5b8b8; background:#fff7f7; }
+.journey .pcard.stage-Grad     { border-color:#9b8bd9; background:#faf7ff; }
+.journey .pcard .label { color:var(--muted); font-size:10px; text-transform:uppercase;
+  letter-spacing:.04em; font-weight:700; line-height:1.1; }
+.journey .pcard .value { font-size:22px; font-weight:700; color:var(--ink);
+  line-height:1.1; margin-top:2px; }
+.journey .pcard .value small { font-size:11px; color:var(--muted); font-weight:500;
+  margin-left:4px; }
+.journey .pcard .chips { display:flex; gap:3px; margin-top:5px; flex-wrap:wrap; }
+.journey .pcard .chip { padding:1px 6px; border-radius:99px; font-size:10.5px;
+  font-weight:600; background:rgba(11,61,145,.08); color:var(--ink); white-space:nowrap; }
+.journey .pcard.stage-PreMed   .chip { background:#cdd9f5; color:#102a5c; }
+.journey .pcard.stage-BasicSc  .chip { background:#a8d8ea; color:#073447; }
+.journey .pcard.stage-PreClin  .chip { background:#ffe0a3; color:#5a3a00; }
+.journey .pcard.stage-Clinicals.chip,
+.journey .pcard.stage-Clinicals .chip { background:#b6e3c1; color:#114a2a; }
+.journey .pcard.stage-Exited   .chip { background:#f5b8b8; color:#5a0e0e; }
+.journey .pcard.stage-Grad     .chip { background:#9b8bd9; color:#1c0c4d; }
+.journey .pcard .moneyrow { margin-top:4px; font-size:11px; color:var(--muted); }
+.journey .pcard .moneyrow b { color:var(--ink); font-weight:700; }
+/* Show/Hide SubTotals — toggle in a row below journey header */
+.subtotals-row { display:flex; justify-content:flex-end; padding:4px 22px 6px 22px;
+  background:#fff; border-bottom:1px solid var(--border); }
+.subtotals-toggle { font:11px inherit; padding:3px 11px; border:1.5px solid var(--brand);
+  border-radius:99px; background:#fff; color:var(--brand); cursor:pointer;
+  font-weight:600; line-height:1.4; white-space:nowrap; }
+.subtotals-toggle:hover { background:var(--brand-2); color:#fff; border-color:var(--brand-2); }
+.subtotals-toggle.on { background:var(--brand); color:#fff; }
+body.hide-subtotals .journey .pcard .chips,
+body.hide-subtotals .journey .pcard .moneyrow { display:none; }
+.kpi .card.sev-high { border-color:var(--sev-high); background:#fef2f2; }
+.kpi .card.sev-med  { border-color:var(--sev-med);  background:#fff7ed; }
+.kpi .card.sev-low  { border-color:var(--sev-low);  background:#fafafa; }
+.kpi .label { color:var(--muted); font-size:10px; text-transform:uppercase;
+  letter-spacing:.04em; line-height:1.1; font-weight:600; }
+.kpi .value { font-size:22px; font-weight:700; margin-top:3px; color:var(--ink); line-height:1.1; }
+.kpi .sub { font-size:11px; color:var(--muted); line-height:1.2; margin-top:2px; }
+.filters { display:flex; gap:10px 14px; flex-wrap:wrap; padding:10px 22px;
+  background:#fff; border-bottom:1px solid var(--border); align-items:center; }
+.filters label { font-size:12px; color:var(--muted); font-weight:600; }
+.filters input[type=text], .filters select { font:13px inherit; padding:6px 10px;
+  border:1.5px solid var(--brand); border-radius:6px; background:white;
+  color:var(--ink); box-shadow:0 1px 2px rgba(11,61,145,.08); }
+.filters input[type=text]:focus, .filters select:focus { outline:none;
+  border-color:var(--accent); box-shadow:0 0 0 3px rgba(240,165,0,.25); }
+.filters .count { margin-left:auto; font-size:12px; color:var(--muted); }
+.filters button.clear { font:12px inherit; padding:6px 12px; border:1.5px solid var(--brand);
+  border-radius:6px; background:#fff; color:var(--brand); cursor:pointer; font-weight:600; }
+.filters button.clear:hover { background:var(--brand); color:white; }
+.panel { background:var(--panel); border:1px solid var(--border); border-radius:10px;
+  margin:14px 22px; }
+/* Default: hide overflow (rounded corners look clean for KPI / text panels) */
+.panel:not(.panel-scroll) { overflow:hidden; }
+/* Scrollable table panel — allows sticky thead while body scrolls within it.
+   Roughly 70% of viewport so filters + header stay visible. */
+.panel-scroll { max-height: 70vh; overflow:auto; }
+table.data { width:100%; border-collapse:collapse; }
+table.data thead th { position:sticky; top:0; background:#f0f3f8; color:var(--ink);
+  font-weight:600; font-size:11px; text-transform:uppercase; letter-spacing:.05em;
+  padding:8px 10px; text-align:left; border-bottom:2px solid var(--brand); z-index:4;
+  cursor:pointer; user-select:none; white-space:nowrap; }
+table.data thead th:hover { background:#e1e7f0; }
+table.data thead th.sorted-asc::after  { content:" ▲"; color:var(--brand); }
+table.data thead th.sorted-desc::after { content:" ▼"; color:var(--brand); }
+table.data tbody td { padding:7px 10px; border-bottom:1px solid var(--border);
+  vertical-align:top; font-size:13px; }
+table.data tbody tr:hover { background:#f8fafc; }
+table.data tbody tr.hidden { display:none; }
+/* Column-group dividers — thicker left border separates Expected | Billed |
+   Paid | AR groups on the table. Applied to header + each cell in that column. */
+table.data thead th.col-group, table.data tbody td.col-group {
+  border-left: 2px solid var(--brand);
+}
+/* Outstanding-balance row highlight (amber tint) — student has unpaid current-term obligation */
+table.data tbody tr.outstanding { background:#fffbeb; }
+table.data tbody tr.outstanding:hover { background:#fef3c7; }
+table.data tbody tr.outstanding > td:first-child { border-left:3px solid var(--accent); }
+.num { text-align:right; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.num.pos { color:var(--pos); }
+.num.neg { color:var(--neg); }
+.pill { display:inline-block; padding:2px 8px; border-radius:99px; font-size:11px;
+  font-weight:600; white-space:nowrap; }
+.pill.sev-high { background:#fee2e2; color:#7f1d1d; }
+.pill.sev-med  { background:#fef3c7; color:#78350f; }
+.pill.sev-low  { background:#e5e7eb; color:#374151; }
+.pill.flag     { background:#dbeafe; color:#1e3a8a; }
+.pill.cat      { background:#ede9fe; color:#5b21b6; }
+.muted { color:var(--muted); }
+footer.runinfo { text-align:center; padding:18px 22px; color:var(--muted);
+  font-size:11.5px; font-style:italic; }
+/* Populi pill — matches Student Journey's .populi-pill ("P↗" yellow badge) */
+.populi-pill { display:inline-flex; align-items:center; gap:2px; margin-left:6px;
+  padding:0 5px; border:1px solid #b88800; border-radius:99px; background:#fff4c4;
+  color:#5a4500; font-size:9.5px; font-weight:700; letter-spacing:.03em;
+  text-decoration:none; line-height:1.55; vertical-align:1px; }
+.populi-pill:hover { background:#ffe689; color:#3d2f00; border-color:#7a5a00; }
+/* QBO pill — "Q↗" green badge, links to QuickBooks customer detail page */
+.qbo-pill { display:inline-flex; align-items:center; gap:2px; margin-left:4px;
+  padding:0 5px; border:1px solid #2a8a3a; border-radius:99px; background:#d9f0d4;
+  color:#1d4f25; font-size:9.5px; font-weight:700; letter-spacing:.03em;
+  text-decoration:none; line-height:1.55; vertical-align:1px; }
+.qbo-pill:hover { background:#b8e3b0; color:#0f3014; border-color:#1d4f25; }
+</style>
+</head><body>
+<header class="topbar">
+  <h1>AUSOMA Student Finance · Clinicals</h1>
+  <div class="meta">Window: 2026-01-01 → 2026-05-21 · <b>Current Term: Summer 2026</b> · Generated 2026-05-21T09:44:40</div>
+</header>
+<nav class='tabs'><a class="" href="./index.html">Overview</a><a class="" href="./basic_sciences.html">Basic Sciences</a><a class="" href="./pre_clinical.html">Pre-Clinical</a><a class="active" href="./clinical_sciences.html">Clinical Sciences</a><a class="" href="./ar_aging.html">AR Aging</a><a class="" href="./exceptions.html">Exceptions Queue</a></nav>
+
+<div class="journey">
+  <div class="pcard enrolled">
+    <div class="label">Enrolled</div>
+    <div class="value">82<small>students</small></div>
+    <div class="chips"><span class="chip"><b>0</b> Active</span><span class="chip"><b>26</b> ASF</span><span class="chip"><b>2</b> LOA</span><span class="chip"><b>5</b> IBST\ICST</span><span class="chip"><b>18</b> Between</span><span class="chip"><b>3</b> Deferred</span></div>
+    <div class="moneyrow">Expected (May 2026): <b>$89,362</b></div><div class="moneyrow">Billed: <b>$119,000</b> <span style="color:var(--muted);">(+$29,638)</span></div><div class="moneyrow">Collected: <b>$43,597</b></div>
+  </div>
+  <div class="pcard stage-BasicSc">
+    <div class="label">Basic Sciences</div>
+    <div class="value">29 <small>(6 PM · 23 MD1-5)</small></div>
+    <div class="chips"><span class="chip"><b>0</b> MD1</span><span class="chip"><b>7</b> MD2</span><span class="chip"><b>5</b> MD3</span><span class="chip"><b>0</b> MD4</span><span class="chip"><b>11</b> MD5</span></div>
+    <div class="moneyrow">Expected (May 2026): <b>$48,975</b></div><div class="moneyrow">Billed: <b>$52,500</b> <span style="color:var(--muted);">(+$3,525)</span></div><div class="moneyrow">Collected: <b>$26,250</b></div>
+  </div>
+  <div class="pcard stage-PreClin">
+    <div class="label">Pre-Clinicals</div>
+    <div class="value">24<small>students</small></div>
+    <div class="chips"><span class="chip"><b>4</b> IBST</span><span class="chip"><b>19</b> ASF</span><span class="chip"><b>1</b> LOA</span></div>
+    <div class="moneyrow">Expected (May 2026): <b>$12,000</b></div><div class="moneyrow">Billed: <b>$13,750</b> <span style="color:var(--muted);">(+$1,750)</span></div><div class="moneyrow">Collected: <b>$7,125</b></div>
+  </div>
+  <div class="pcard stage-Clinicals">
+    <div class="label">Clinicals</div>
+    <div class="value">26<small>students</small></div>
+    <div class="chips"><span class="chip"><b>0</b> Active</span><span class="chip"><b>26</b> Not Active</span></div>
+    <div class="moneyrow">Expected (May 2026): <b>$86,666</b></div><div class="moneyrow">Billed: <b>$52,750</b> <span style="color:var(--muted);">($-33,916)</span></div><div class="moneyrow">Collected: <b>$11,847</b></div>
+  </div>
+</div>
+<div class="subtotals-row">
+  <button id="subtotalsToggle" class="subtotals-toggle" type="button">Show Sub-Totals</button>
+</div>
+<script>
+(function() {
+  const btn = document.getElementById('subtotalsToggle');
+  if (!btn) return;
+  // Default to HIDDEN sub-totals (per Jawad's preference). Restore prior choice from localStorage.
+  const stored = localStorage.getItem('financeSubtotalsHidden');
+  const hidden = (stored === null) ? true : (stored === '1');
+  if (hidden) {
+    document.body.classList.add('hide-subtotals');
+    btn.classList.remove('on');
+    btn.textContent = 'Show Sub-Totals';
+  } else {
+    document.body.classList.remove('hide-subtotals');
+    btn.classList.add('on');
+    btn.textContent = 'Hide Sub-Totals';
+  }
+  btn.addEventListener('click', () => {
+    const nowHidden = !document.body.classList.contains('hide-subtotals');
+    document.body.classList.toggle('hide-subtotals', nowHidden);
+    btn.classList.toggle('on', !nowHidden);
+    btn.textContent = nowHidden ? 'Show Sub-Totals' : 'Hide Sub-Totals';
+    localStorage.setItem('financeSubtotalsHidden', nowHidden ? '1' : '0');
+  });
+})();
+</script>
+
+<div class="kpi"><div class="card"><div class="label">Enrolled students</div><div class="value">26</div><div class="sub">of 26 total in this phase</div></div><div class="card"><div class="label">Expected (Summer 2026)</div><div class="value">$101,548</div></div><div class="card"><div class="label">Billed (Summer 2026)</div><div class="value">$277,300</div><div class="sub">Populi $277,300 · QBO $203,617</div></div><div class="card"><div class="label">Gap to expected</div><div class="value">$+175,752</div><div class="sub">billed minus expected</div></div><div class="card"><div class="label">Collected (Summer 2026)</div><div class="value">$189,067</div><div class="sub">Populi $114,865 · QBO $189,067</div></div><div class="card sev-med"><div class="label">Outstanding AR</div><div class="value">$118,467</div><div class="sub">from this phase</div></div><div class="card sev-high"><div class="label">High-severity flags</div><div class="value">33</div></div></div>
+
+<div class="filters">
+  <label>Period:</label>
+  <select id="semf"><option value="current" selected>Summer 2026</option><option value="all" disabled>(historical view — coming soon)</option></select>
+  <label>Show:</label>
+  <select id="enrf">
+    <option value="enrolled">Enrolled only (default)</option>
+    <option value="all">All students (incl. inactive / alumni)</option>
+    <option value="notenrolled">Non-enrolled only</option>
+  </select>
+  <label>Search:</label>
+  <input type="text" id="q" placeholder="Name, ID..." style="min-width:220px;">
+  <label>Program:</label>
+  <select id="subf"><option value="">All</option></select>
+  <label>Status:</label>
+  <select id="vfilter">
+    <option value="">All</option>
+    <option value="gap">Gap to expected &gt; $1</option>
+    <option value="unbilled">Expected but unbilled</option>
+    <option value="unpaid">Has AR balance</option>
+    <option value="outstanding">Outstanding current term</option>
+  </select>
+  <span class="count" id="cnt"></span>
+</div>
+
+<div class="panel panel-scroll">
+  <table class="data" id="t">
+    <thead><tr>
+      <th data-sort="string">Name</th>
+      <th data-sort="num" class="sorted-asc">Program</th>
+      <th class="col-group" data-sort="num">Expected</th>
+      <th class="col-group" data-sort="num">Populi billed</th>
+      <th data-sort="num">QBO billed</th>
+      <th data-sort="num">Gap vs exp</th>
+      <th class="col-group" data-sort="num">Populi paid</th>
+      <th data-sort="num">QBO paid</th>
+      <th class="col-group" data-sort="num">QBO AR</th>
+      <th class="col-group" data-sort="string">Flags (H/M/L)</th>
+    </tr></thead>
+    <tbody>
+      <tr class="outstanding" data-subphase="ApplMatch" data-enrolled="Yes" data-outstanding="1000.00"><td data-v="jibawi ghassan"><div><b>Jibawi, Ghassan</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/24547279/financial" target="_blank" rel="noopener" title="Open Ghassan Jibawi financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=68" target="_blank" rel="noopener" title="Open Ghassan Jibawi in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2021000028</div></td><td data-v="99"><span class="pill cat">ApplMatch</span></td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num" data-v="3000.0">$3,000.00</td><td class="num" data-v="3000.0">$3,000.00</td><td class="num pos" data-v="3000.0">+$3,000.00</td><td class="col-group num" data-v="6000.0">$6,000.00</td><td class="num" data-v="8000.0">$8,000.00</td><td class="col-group num" data-v="1000.0">$1,000.00</td><td class="col-group num">0/1/0</td></tr><tr class="outstanding" data-subphase="ApplMatch" data-enrolled="Yes" data-outstanding="1000.00"><td data-v="mir nauroze"><div><b>Mir, Nauroze</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/24547374/financial" target="_blank" rel="noopener" title="Open Nauroze Mir financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=356" target="_blank" rel="noopener" title="Open Nauroze Mir in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2023000034</div></td><td data-v="99"><span class="pill cat">ApplMatch</span></td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num" data-v="1000.0">$1,000.00</td><td class="num" data-v="1000.0">$1,000.00</td><td class="num pos" data-v="1000.0">+$1,000.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="num" data-v="0.0">$0.00</td><td class="col-group num" data-v="1000.0">$1,000.00</td><td class="col-group num">0/0/0</td></tr><tr class="" data-subphase="CC" data-enrolled="Yes" data-outstanding="0.00"><td data-v="carrasco mario"><div><b>Carrasco, Mario</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/24542274/financial" target="_blank" rel="noopener" title="Open Mario Carrasco financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=118" target="_blank" rel="noopener" title="Open Mario Carrasco in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2021000019</div></td><td data-v="99"><span class="pill cat">CC</span></td><td class="col-group num" data-v="5119.05">$5,119.05</td><td class="col-group num" data-v="0.0">$0.00</td><td class="num" data-v="0.0">$0.00</td><td class="num neg" data-v="-5119.05">$-5,119.05</td><td class="col-group num" data-v="0.0">$0.00</td><td class="num" data-v="0.0">$0.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num">1/0/0</td></tr><tr class="" data-subphase="CC" data-enrolled="Yes" data-outstanding="0.00"><td data-v="larmonie marie-claire"><div><b>Larmonie, Marie-Claire</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/24547317/financial" target="_blank" rel="noopener" title="Open Marie-Claire Larmonie financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=305" target="_blank" rel="noopener" title="Open Marie-Claire Larmonie in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2022000024</div></td><td data-v="99"><span class="pill cat">CC</span></td><td class="col-group num" data-v="9166.67">$9,166.67</td><td class="col-group num" data-v="15750.0">$15,750.00</td><td class="num" data-v="15750.0">$15,750.00</td><td class="num pos" data-v="6583.33">+$6,583.33</td><td class="col-group num" data-v="15750.0">$15,750.00</td><td class="num" data-v="31500.0">$31,500.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num">1/2/3</td></tr><tr class="" data-subphase="CC" data-enrolled="Yes" data-outstanding="0.00"><td data-v="lee gae"><div><b>Lee, Gae</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/24547380/financial" target="_blank" rel="noopener" title="Open Gae Lee financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=397" target="_blank" rel="noopener" title="Open Gae Lee in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2023000040</div></td><td data-v="99"><span class="pill cat">CC</span></td><td class="col-group num" data-v="8690.48">$8,690.48</td><td class="col-group num" data-v="12650.0">$12,650.00</td><td class="num" data-v="12650.0">$12,650.00</td><td class="num pos" data-v="3959.5200000000004">+$3,959.52</td><td class="col-group num" data-v="8205.5">$8,205.50</td><td class="num" data-v="25300.0">$25,300.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num">1/2/1</td></tr><tr class="outstanding" data-subphase="CC" data-enrolled="Yes" data-outstanding="10250.00"><td data-v="seba rafael"><div><b>Seba, Rafael</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/24547445/financial" target="_blank" rel="noopener" title="Open Rafael Seba financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=559" target="_blank" rel="noopener" title="Open Rafael Seba in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2025000016</div></td><td data-v="99"><span class="pill cat">CC</span></td><td class="col-group num" data-v="7142.86">$7,142.86</td><td class="col-group num" data-v="25250.0">$25,250.00</td><td class="num" data-v="10250.0">$10,250.00</td><td class="num pos" data-v="18107.14">+$18,107.14</td><td class="col-group num" data-v="4146.85">$4,146.85</td><td class="num" data-v="0.0">$0.00</td><td class="col-group num" data-v="10250.0">$10,250.00</td><td class="col-group num">1/4/1</td></tr><tr class="" data-subphase="CC" data-enrolled="Yes" data-outstanding="0.00"><td data-v="smith moneesha"><div><b>Smith, Moneesha</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/24547366/financial" target="_blank" rel="noopener" title="Open Moneesha Smith financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=349" target="_blank" rel="noopener" title="Open Moneesha Smith in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2023000027</div></td><td data-v="99"><span class="pill cat">CC</span></td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="num" data-v="0.0">$0.00</td><td class="num" data-v="0.0">$0.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="num" data-v="0.0">$0.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num">0/0/0</td></tr><tr class="outstanding" data-subphase="CC1" data-enrolled="Yes" data-outstanding="2500.00"><td data-v="blount anthony"><div><b>Blount, Anthony</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/20759444/financial" target="_blank" rel="noopener" title="Open Anthony Blount financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=20" target="_blank" rel="noopener" title="Open Anthony Blount in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2019000045</div></td><td data-v="99"><span class="pill cat">CC1</span></td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num" data-v="5000.0">$5,000.00</td><td class="num" data-v="2500.0">$2,500.00</td><td class="num pos" data-v="5000.0">+$5,000.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="num" data-v="0.0">$0.00</td><td class="col-group num" data-v="2500.0">$2,500.00</td><td class="col-group num">2/3/0</td></tr><tr class="outstanding" data-subphase="CC1" data-enrolled="Yes" data-outstanding="7500.00"><td data-v="casimir ketpha"><div><b>Casimir, Ketpha</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/24547361/financial" target="_blank" rel="noopener" title="Open Ketpha Casimir financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=343" target="_blank" rel="noopener" title="Open Ketpha Casimir in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2023000022</div></td><td data-v="99"><span class="pill cat">CC1</span></td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num" data-v="7500.0">$7,500.00</td><td class="num" data-v="7500.0">$7,500.00</td><td class="num pos" data-v="7500.0">+$7,500.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="num" data-v="0.0">$0.00</td><td class="col-group num" data-v="7500.0">$7,500.00</td><td class="col-group num">0/0/0</td></tr><tr class="" data-subphase="CC1" data-enrolled="Yes" data-outstanding="0.00"><td data-v="chauhan bhavesh"><div><b>Chauhan, Bhavesh</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/24547364/financial" target="_blank" rel="noopener" title="Open Bhavesh Chauhan financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=348" target="_blank" rel="noopener" title="Open Bhavesh Chauhan in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2023000025</div></td><td data-v="99"><span class="pill cat">CC1</span></td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num" data-v="7000.0">$7,000.00</td><td class="num" data-v="7000.0">$7,000.00</td><td class="num pos" data-v="7000.0">+$7,000.00</td><td class="col-group num" data-v="10000.0">$10,000.00</td><td class="num" data-v="15500.0">$15,500.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num">1/1/1</td></tr><tr class="" data-subphase="CC1" data-enrolled="Yes" data-outstanding="0.00"><td data-v="sanduby lilah"><div><b>Sanduby, Lilah</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/24547423/financial" target="_blank" rel="noopener" title="Open Lilah Sanduby financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=486" target="_blank" rel="noopener" title="Open Lilah Sanduby in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2025000002</div></td><td data-v="99"><span class="pill cat">CC1</span></td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="num" data-v="0.0">$0.00</td><td class="num" data-v="0.0">$0.00</td><td class="col-group num" data-v="5250.0">$5,250.00</td><td class="num" data-v="5250.0">$5,250.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num">0/0/0</td></tr><tr class="outstanding" data-subphase="CC2" data-enrolled="Yes" data-outstanding="500.00"><td data-v="moeen ghania"><div><b>Moeen, Ghania</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/24547302/financial" target="_blank" rel="noopener" title="Open Ghania Moeen financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=297" target="_blank" rel="noopener" title="Open Ghania Moeen in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2022000012</div></td><td data-v="99"><span class="pill cat">CC2</span></td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num" data-v="1000.0">$1,000.00</td><td class="num" data-v="1000.0">$1,000.00</td><td class="num pos" data-v="1000.0">+$1,000.00</td><td class="col-group num" data-v="500.0">$500.00</td><td class="num" data-v="1000.0">$1,000.00</td><td class="col-group num" data-v="500.0">$500.00</td><td class="col-group num">0/1/0</td></tr><tr class="" data-subphase="CC3" data-enrolled="Yes" data-outstanding="0.00"><td data-v="islam rifat"><div><b>Islam, Rifat</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/23332412/financial" target="_blank" rel="noopener" title="Open Rifat Islam financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=162" target="_blank" rel="noopener" title="Open Rifat Islam in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2020000036</div></td><td data-v="99"><span class="pill cat">CC3</span></td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="num" data-v="0.0">$0.00</td><td class="num" data-v="0.0">$0.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="num" data-v="0.0">$0.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num">0/0/0</td></tr><tr class="outstanding" data-subphase="CE" data-enrolled="Yes" data-outstanding="1666.67"><td data-v="dhaliwal jaskaran"><div><b>Dhaliwal, Jaskaran</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/24547339/financial" target="_blank" rel="noopener" title="Open Jaskaran Dhaliwal financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=338" target="_blank" rel="noopener" title="Open Jaskaran Dhaliwal in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2023000005</div></td><td data-v="99"><span class="pill cat">CE</span></td><td class="col-group num" data-v="7619.05">$7,619.05</td><td class="col-group num" data-v="13583.33">$13,583.33</td><td class="num" data-v="15250.0">$15,250.00</td><td class="num pos" data-v="7630.95">+$7,630.95</td><td class="col-group num" data-v="15350.0">$15,350.00</td><td class="num" data-v="27166.66">$27,166.66</td><td class="col-group num" data-v="1666.67">$1,666.67</td><td class="col-group num">3/2/3</td></tr><tr class="outstanding" data-subphase="CE" data-enrolled="Yes" data-outstanding="16000.00"><td data-v="fauzi vonni"><div><b>Fauzi, Vonni</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/20771762/financial" target="_blank" rel="noopener" title="Open Vonni Fauzi financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=191" target="_blank" rel="noopener" title="Open Vonni Fauzi in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2019000050</div></td><td data-v="99"><span class="pill cat">CE</span></td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num" data-v="25000.0">$25,000.00</td><td class="num" data-v="25000.0">$25,000.00</td><td class="num pos" data-v="25000.0">+$25,000.00</td><td class="col-group num" data-v="9000.0">$9,000.00</td><td class="num" data-v="18000.0">$18,000.00</td><td class="col-group num" data-v="16000.0">$16,000.00</td><td class="col-group num">1/3/0</td></tr><tr class="outstanding" data-subphase="CE" data-enrolled="Yes" data-outstanding="9750.00"><td data-v="holka ashley"><div><b>Holka, Ashley</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/24547411/financial" target="_blank" rel="noopener" title="Open Ashley Holka financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=418" target="_blank" rel="noopener" title="Open Ashley Holka in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2024000020</div></td><td data-v="99"><span class="pill cat">CE</span></td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num" data-v="13000.0">$13,000.00</td><td class="num" data-v="9750.0">$9,750.00</td><td class="num pos" data-v="13000.0">+$13,000.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="num" data-v="0.0">$0.00</td><td class="col-group num" data-v="9750.0">$9,750.00</td><td class="col-group num">3/3/2</td></tr><tr class="" data-subphase="CE" data-enrolled="Yes" data-outstanding="0.00"><td data-v="merriman sarah"><div><b>Merriman, Sarah</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/24499010/financial" target="_blank" rel="noopener" title="Open Sarah Merriman financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=284" target="_blank" rel="noopener" title="Open Sarah Merriman in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2021000011</div></td><td data-v="99"><span class="pill cat">CE</span></td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num" data-v="250.0">$250.00</td><td class="num" data-v="250.0">$250.00</td><td class="num pos" data-v="250.0">+$250.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="num" data-v="500.0">$500.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num">1/1/1</td></tr><tr class="outstanding" data-subphase="CE" data-enrolled="Yes" data-outstanding="15999.86"><td data-v="raza farah"><div><b>Raza, Farah</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/19841383/financial" target="_blank" rel="noopener" title="Open Farah Raza financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=58" target="_blank" rel="noopener" title="Open Farah Raza in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2019000020</div></td><td data-v="99"><span class="pill cat">CE</span></td><td class="col-group num" data-v="10833.33">$10,833.33</td><td class="col-group num" data-v="17666.53">$17,666.53</td><td class="num" data-v="17666.53">$17,666.53</td><td class="num pos" data-v="6833.199999999999">+$6,833.20</td><td class="col-group num" data-v="2166.67">$2,166.67</td><td class="num" data-v="3833.34">$3,833.34</td><td class="col-group num" data-v="15999.86">$15,999.86</td><td class="col-group num">2/3/2</td></tr><tr class="outstanding" data-subphase="CE" data-enrolled="Yes" data-outstanding="4300.00"><td data-v="shaikh mashad"><div><b>Shaikh, Mashad</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/19765693/financial" target="_blank" rel="noopener" title="Open Mashad Shaikh financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=119" target="_blank" rel="noopener" title="Open Mashad Shaikh in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2019000015</div></td><td data-v="99"><span class="pill cat">CE</span></td><td class="col-group num" data-v="5000.0">$5,000.00</td><td class="col-group num" data-v="4383.33">$4,383.33</td><td class="num" data-v="4383.33">$4,383.33</td><td class="num neg" data-v="-616.6700000000001">$-616.67</td><td class="col-group num" data-v="4300.0">$4,300.00</td><td class="num" data-v="166.66">$166.66</td><td class="col-group num" data-v="4300.0">$4,300.00</td><td class="col-group num">1/1/1</td></tr><tr class="outstanding" data-subphase="CE" data-enrolled="Yes" data-outstanding="3583.33"><td data-v="soofi saleeha"><div><b>Soofi, Saleeha</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/24547387/financial" target="_blank" rel="noopener" title="Open Saleeha Soofi financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=393" target="_blank" rel="noopener" title="Open Saleeha Soofi in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2024000002</div></td><td data-v="99"><span class="pill cat">CE</span></td><td class="col-group num" data-v="2976.19">$2,976.19</td><td class="col-group num" data-v="28833.33">$28,833.33</td><td class="num" data-v="3583.33">$3,583.33</td><td class="num pos" data-v="25857.140000000003">+$25,857.14</td><td class="col-group num" data-v="0.0">$0.00</td><td class="num" data-v="0.0">$0.00</td><td class="col-group num" data-v="3583.33">$3,583.33</td><td class="col-group num">3/3/3</td></tr><tr class="outstanding" data-subphase="CE" data-enrolled="Yes" data-outstanding="17666.66"><td data-v="syed mahmood"><div><b>Syed, Mahmood</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/24547311/financial" target="_blank" rel="noopener" title="Open Mahmood Syed financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=301" target="_blank" rel="noopener" title="Open Mahmood Syed in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2022000020</div></td><td data-v="99"><span class="pill cat">CE</span></td><td class="col-group num" data-v="10595.24">$10,595.24</td><td class="col-group num" data-v="20166.66">$20,166.66</td><td class="num" data-v="17666.66">$17,666.66</td><td class="num pos" data-v="9571.42">+$9,571.42</td><td class="col-group num" data-v="1000.0">$1,000.00</td><td class="num" data-v="0.0">$0.00</td><td class="col-group num" data-v="17666.66">$17,666.66</td><td class="col-group num">3/3/2</td></tr><tr class="outstanding" data-subphase="CE10" data-enrolled="Yes" data-outstanding="1000.00"><td data-v="anietom mmesoma"><div><b>Anietom, Mmesoma</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/24547312/financial" target="_blank" rel="noopener" title="Open Mmesoma Anietom financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=293" target="_blank" rel="noopener" title="Open Mmesoma Anietom in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2022000021</div></td><td data-v="99"><span class="pill cat">CE10</span></td><td class="col-group num" data-v="7976.19">$7,976.19</td><td class="col-group num" data-v="9333.33">$9,333.33</td><td class="num" data-v="9333.33">$9,333.33</td><td class="num pos" data-v="1357.1400000000003">+$1,357.14</td><td class="col-group num" data-v="15000.0">$15,000.00</td><td class="num" data-v="23333.33">$23,333.33</td><td class="col-group num" data-v="1000.0">$1,000.00</td><td class="col-group num">2/2/0</td></tr><tr class="" data-subphase="CE6" data-enrolled="Yes" data-outstanding="0.00"><td data-v="olowomeye olayemi"><div><b>Olowomeye, Olayemi</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/23759366/financial" target="_blank" rel="noopener" title="Open Olayemi Olowomeye financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=141" target="_blank" rel="noopener" title="Open Olayemi Olowomeye in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2020000048</div></td><td data-v="99"><span class="pill cat">CE6</span></td><td class="col-group num" data-v="7142.86">$7,142.86</td><td class="col-group num" data-v="14333.33">$14,333.33</td><td class="num" data-v="14333.33">$14,333.33</td><td class="num pos" data-v="7190.47">+$7,190.47</td><td class="col-group num" data-v="11000.0">$11,000.00</td><td class="num" data-v="28666.66">$28,666.66</td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num">2/2/0</td></tr><tr class="outstanding" data-subphase="CPS" data-enrolled="Yes" data-outstanding="10250.00"><td data-v="aka philip"><div><b>Aka, Philip</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/24547453/financial" target="_blank" rel="noopener" title="Open Philip Aka financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=561" target="_blank" rel="noopener" title="Open Philip Aka in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2025000021</div></td><td data-v="99"><span class="pill cat">CPS</span></td><td class="col-group num" data-v="9642.86">$9,642.86</td><td class="col-group num" data-v="21450.0">$21,450.00</td><td class="num" data-v="10250.0">$10,250.00</td><td class="num pos" data-v="11807.14">+$11,807.14</td><td class="col-group num" data-v="5995.9">$5,995.90</td><td class="num" data-v="150.0">$150.00</td><td class="col-group num" data-v="10250.0">$10,250.00</td><td class="col-group num">3/3/1</td></tr><tr class="outstanding" data-subphase="ICST" data-enrolled="Yes" data-outstanding="15500.00"><td data-v="kushakov otabek"><div><b>Kushakov, Otabek</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/24547359/financial" target="_blank" rel="noopener" title="Open Otabek Kushakov financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=360" target="_blank" rel="noopener" title="Open Otabek Kushakov in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2023000020</div></td><td data-v="99"><span class="pill cat">ICST</span></td><td class="col-group num" data-v="9642.86">$9,642.86</td><td class="col-group num" data-v="31150.0">$31,150.00</td><td class="num" data-v="15500.0">$15,500.00</td><td class="num pos" data-v="21507.14">+$21,507.14</td><td class="col-group num" data-v="1200.0">$1,200.00</td><td class="num" data-v="700.0">$700.00</td><td class="col-group num" data-v="15500.0">$15,500.00</td><td class="col-group num">2/4/4</td></tr><tr class="" data-subphase="LOA" data-enrolled="Yes" data-outstanding="0.00"><td data-v="bhat malpe surekha"><div><b>Bhat, Malpe Surekha</b><a class="populi-pill" href="https://ausoma.populiweb.com/router/contacts/people/23702228/financial" target="_blank" rel="noopener" title="Open Malpe Surekha Bhat financials in Populi">P<span aria-hidden="true">&#8599;</span></a><a class="qbo-pill" href="https://qbo.intuit.com/app/customerdetail?nameId=113" target="_blank" rel="noopener" title="Open Malpe Surekha Bhat in QuickBooks Online">Q<span aria-hidden="true">&#8599;</span></a></div><div style="font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;">2021000010</div></td><td data-v="99"><span class="pill cat">LOA</span></td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="num" data-v="0.0">$0.00</td><td class="num" data-v="0.0">$0.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="num" data-v="0.0">$0.00</td><td class="col-group num" data-v="0.0">$0.00</td><td class="col-group num">0/0/0</td></tr>
+    </tbody>
+  </table>
+</div>
+<script>
+document.getElementById('subf').innerHTML = `<option value="">All program levels</option><option value="ApplMatch">ApplMatch</option><option value="CC">CC</option><option value="CC1">CC1</option><option value="CC2">CC2</option><option value="CC3">CC3</option><option value="CE">CE</option><option value="CE10">CE10</option><option value="CE6">CE6</option><option value="CPS">CPS</option><option value="ICST">ICST</option><option value="LOA">LOA</option>`;
+function applyFilters() {
+  const q = (document.getElementById('q').value || '').toLowerCase().trim();
+  const sp = document.getElementById('subf').value;
+  const vf = document.getElementById('vfilter').value;
+  const ef = document.getElementById('enrf').value;
+  const rows = document.querySelectorAll('#t tbody tr');
+  let shown = 0;
+  rows.forEach(row => {
+    const text = row.textContent.toLowerCase();
+    const rsp = row.dataset.subphase || '';
+    const enrolled = row.dataset.enrolled || 'No';
+    const outstanding = parseFloat(row.dataset.outstanding || 0);
+    const expected = parseFloat(row.cells[2]?.dataset?.v || 0);
+    const populi = parseFloat(row.cells[3]?.dataset?.v || 0);
+    const qbo = parseFloat(row.cells[4]?.dataset?.v || 0);
+    const gap = parseFloat(row.cells[5]?.dataset?.v || 0);
+    const ar = parseFloat(row.cells[8]?.dataset?.v || 0);
+    const billed = Math.max(populi, qbo);
+    let visible = q === '' || text.includes(q);
+    if (visible) {
+      if (ef === 'enrolled')        visible = enrolled === 'Yes';
+      else if (ef === 'notenrolled') visible = enrolled !== 'Yes';
+    }
+    if (visible && sp) visible = rsp === sp;
+    if (visible && vf === 'gap') visible = Math.abs(gap) > 1;
+    if (visible && vf === 'unbilled') visible = expected > 0 && billed < 1;
+    if (visible && vf === 'unpaid') visible = ar > 0;
+    if (visible && vf === 'outstanding') visible = outstanding > 1;
+    row.classList.toggle('hidden', !visible);
+    if (visible) shown++;
+  });
+  document.getElementById('cnt').textContent = shown + ' of ' + rows.length;
+}
+document.getElementById('q').addEventListener('input', applyFilters);
+document.getElementById('subf').addEventListener('change', applyFilters);
+document.getElementById('vfilter').addEventListener('change', applyFilters);
+document.getElementById('enrf').addEventListener('change', applyFilters);
+// Period dropdown — navigates to the selected period's page when its value
+// looks like an HTML filename (period_options pre-rendered).
+document.getElementById('semf').addEventListener('change', (e) => {
+  const val = e.target.value;
+  if (val && val !== 'current' && val !== 'all' && val.endsWith('.html')) {
+    window.location.href = val;
+  }
+});
+applyFilters();
+</script>
+
+
+<footer class="runinfo">Built by build_finance_pages.py from 2026-01-01 → 2026-05-21 reconciliation snapshot.</footer>
+<script>
+// Sort by clicking thead. Numeric vs string inferred from data-sort attribute.
+function makeSortable(table) {
+  const thead = table.tHead;
+  if (!thead) return;
+  const ths = thead.querySelectorAll('th');
+  ths.forEach((th, idx) => {
+    th.addEventListener('click', () => {
+      const type = th.dataset.sort || 'string';
+      const tbody = table.tBodies[0];
+      const rows = Array.from(tbody.rows);
+      const dir = th.classList.contains('sorted-asc') ? -1 : 1;
+      ths.forEach(t => t.classList.remove('sorted-asc', 'sorted-desc'));
+      th.classList.toggle('sorted-asc', dir === 1);
+      th.classList.toggle('sorted-desc', dir === -1);
+      rows.sort((a, b) => {
+        let A = a.cells[idx]?.dataset?.v ?? a.cells[idx]?.textContent ?? '';
+        let B = b.cells[idx]?.dataset?.v ?? b.cells[idx]?.textContent ?? '';
+        if (type === 'num') {
+          A = parseFloat(A) || 0; B = parseFloat(B) || 0;
+        } else if (type === 'date') {
+          A = Date.parse(A) || 0; B = Date.parse(B) || 0;
+        } else {
+          A = String(A).toLowerCase(); B = String(B).toLowerCase();
+        }
+        return A < B ? -1 * dir : A > B ? 1 * dir : 0;
+      });
+      rows.forEach(r => tbody.appendChild(r));
+    });
+  });
+}
+function makeFilterable(table, input, countEl) {
+  function apply() {
+    const q = (input.value || '').toLowerCase().trim();
+    let shown = 0;
+    Array.from(table.tBodies[0].rows).forEach(row => {
+      const text = row.textContent.toLowerCase();
+      const visible = q === '' || text.includes(q);
+      row.classList.toggle('hidden', !visible);
+      if (visible) shown++;
+    });
+    if (countEl) countEl.textContent = shown + ' of ' + table.tBodies[0].rows.length;
+  }
+  input.addEventListener('input', apply);
+  apply();
+}
+function makeSelectFilter(table, selectEl, colIdx, countEl) {
+  function apply() {
+    const v = selectEl.value;
+    let shown = 0;
+    Array.from(table.tBodies[0].rows).forEach(row => {
+      const cellText = row.cells[colIdx]?.dataset?.f ?? row.cells[colIdx]?.textContent ?? '';
+      const matches = !v || cellText === v;
+      const wasHidden = row.classList.contains('hidden');
+      const textFilterHides = false;  // simplified — text filter handled separately
+      if (matches) row.classList.remove('hidden'); else row.classList.add('hidden');
+      if (matches && !row.classList.contains('hidden')) shown++;
+    });
+    if (countEl) countEl.textContent = shown + ' of ' + table.tBodies[0].rows.length;
+  }
+  selectEl.addEventListener('change', apply);
+}
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('table.data').forEach(makeSortable);
+});
+</script>
+</body></html>
