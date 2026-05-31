@@ -1,0 +1,338 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a3478">
+<title>AUSOMA · TFC Tuition Reconciliation</title>
+<style>
+:root{color-scheme:light;--navy:#0a3478;--navy-d:#072657;--bg:#eef1f5;--card:#fff;--ink:#1b2430;--muted:#6b7785;
+--line:#dde3ec;--line-strong:#c7d0dd;--accent:#0a3478;--green:#1f8f5f;--green-soft:#e6f4ec;--red:#c0392b;--red-soft:#fbeae7;--amber:#b9791b;--amber-soft:#fbf1df;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+.appbar{background:linear-gradient(180deg,var(--navy),var(--navy-d));color:#fff;padding:16px 0 0;}
+.appbar .inner{max-width:1180px;margin:0 auto;padding:0 22px;}
+.appbar h1{font-size:19px;margin:0;font-weight:700;letter-spacing:.2px;}
+.appbar .meta{font-size:11.5px;color:#c2d2ee;margin:3px 0 14px;}
+.navtabs{max-width:1180px;margin:0 auto;padding:0 14px;display:flex;gap:4px;}
+.navtab{padding:10px 18px;cursor:pointer;font-weight:600;font-size:13.5px;color:#c2d2ee;border-radius:9px 9px 0 0;background:transparent;}
+.navtab:hover{color:#fff;background:rgba(255,255,255,.08);}
+.navtab.active{color:var(--navy);background:var(--bg);}
+.wrap{max-width:1180px;margin:0 auto;padding:22px 22px 20px;}
+.page{display:none;} .page.active{display:block;}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:14px;margin-bottom:18px;}
+.kpi{background:var(--card);border:1px solid var(--line-strong);border-radius:12px;padding:14px 16px;box-shadow:0 1px 2px rgba(10,52,120,.04);}
+.kpi .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;}
+.kpi .val{font-size:21px;font-weight:700;margin-top:5px;color:var(--navy);} .kpi .note{font-size:11px;color:var(--muted);margin-top:3px;}
+.card{background:var(--card);border:1.5px solid var(--line-strong);border-radius:13px;padding:0;margin-bottom:18px;overflow:hidden;box-shadow:0 1px 3px rgba(10,52,120,.05);}
+.card .head{padding:13px 18px;border-bottom:1.5px solid var(--line);background:#f7f9fc;}
+.card h2{font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--navy);margin:0;font-weight:700;}
+.card .csub{font-size:11.5px;color:var(--muted);margin:3px 0 0;}
+.card .body{padding:6px 6px 8px;}
+table{width:100%;border-collapse:collapse;font-size:12.5px;}
+th,td{padding:8px 11px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);text-align:right;white-space:nowrap;}
+th:last-child,td:last-child{border-right:none;}
+.page table th:last-child,.page table td:last-child{text-align:center;}
+th{background:#fff;cursor:pointer;user-select:none;font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);border-bottom:1.5px solid var(--line-strong);}
+th:first-child,td:first-child{text-align:left;} th.sa::after{content:" \25B2";font-size:9px} th.sd::after{content:" \25BC";font-size:9px}
+tbody tr:hover td{background:#f4f7fb;}
+.pill{display:inline-block;font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:999px;}
+.ok{background:var(--green-soft);color:var(--green);} .warn{background:var(--amber-soft);color:var(--amber);} .bad{background:var(--red-soft);color:var(--red);} .house{background:#eef1f5;color:var(--muted);}
+.neg{color:var(--red);} .pos{color:var(--green);}
+.clk{cursor:pointer;} .hint{font-size:11.5px;color:var(--muted);padding:0 12px 10px;}
+.foot{max-width:1180px;margin:6px auto 0;padding:14px 22px 30px;color:var(--muted);font-size:11px;border-top:1px solid var(--line);}
+.modal{display:none;position:fixed;inset:0;background:rgba(10,20,38,.5);z-index:50;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto;}
+.modal .panel{background:#fff;border-radius:14px;max-width:820px;width:100%;padding:0;box-shadow:0 16px 50px rgba(0,0,0,.25);overflow:hidden;}
+.modal .mhead{background:linear-gradient(180deg,var(--navy),var(--navy-d));color:#fff;padding:16px 22px;}
+.modal h3{margin:0;font-size:18px} .modal .mmeta{font-size:12px;color:#c2d2ee;margin-top:3px}
+.close{float:right;border:1px solid rgba(255,255,255,.5);background:transparent;color:#fff;border-radius:8px;padding:4px 11px;cursor:pointer;font-weight:600}
+.mbody{padding:16px 22px 22px;}
+.sumrow{display:flex;gap:18px;flex-wrap:wrap;margin:0 0 14px;} .sumrow div{font-size:12px;color:var(--muted)} .sumrow b{display:block;font-size:15px;color:var(--ink);margin-top:2px}
+.tag{display:inline-block;font-size:10px;font-weight:600;padding:1px 7px;border-radius:999px;background:#eef1f5;color:var(--muted);text-transform:capitalize}
+.subt{color:var(--muted);font-size:11px;}
+.btn{border:1px solid var(--navy);background:#fff;color:var(--navy);border-radius:8px;padding:6px 12px;cursor:pointer;font-weight:600;font-size:12px;}
+.btn:hover{background:var(--navy);color:#fff;}
+.headrow{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
+</style></head>
+<body>
+<div class="appbar">
+  <div class="inner"><h1>AUSOMA · TFC Tuition Reconciliation</h1><div class="meta" id="metaLine"></div></div>
+  <div class="navtabs">
+    <div class="navtab active" data-p="tfc">TFC Report</div>
+    <div class="navtab" data-p="qb">QuickBooks</div>
+    <div class="navtab" data-p="recon">Reconciliation</div>
+  </div>
+</div>
+
+<div class="wrap">
+<div class="page" id="page-recon">
+  <div class="kpis" id="reconKpis"></div>
+  <div class="card"><div class="head"><h2>Matched &mdash; QuickBooks vs TFC (source of truth)</h2>
+    <p class="csub">Variance = QB balance &minus; TFC principal due. Green = tie (&plusmn;$1). Click a row for QB transaction detail with principal/interest split.</p></div>
+    <div class="body"><table id="tMatched"><thead></thead><tbody></tbody></table></div></div>
+  <div class="card"><div class="head"><h2 id="tfcOnlyH">In TFC but not booked in QuickBooks</h2>
+    <p class="csub">TFC-financed principal the QB control account does not yet reflect. These drive most of the aggregate gap.</p></div>
+    <div class="body"><table id="tTfcOnly"><thead></thead><tbody></tbody></table></div></div>
+  <div class="card"><div class="head"><h2 id="qbOnlyH">In QuickBooks but not in latest TFC report</h2>
+    <p class="csub">Usually closed/paid-off loans dropped from TFC's active report. A non-zero QB balance here is a flag.</p></div>
+    <div class="body"><table id="tQbOnly"><thead></thead><tbody></tbody></table></div></div>
+</div>
+
+<div class="page active" id="page-tfc">
+  <div class="kpis" id="tfcKpis"></div>
+  <div class="card"><div class="head headrow"><div><h2>TFC per-student &mdash; principal vs interest</h2>
+    <p class="csub">Cumulative, life-to-date, aggregated across each student's loans. Click a row to see individual loans.</p></div>
+    <button id="toggleInt" class="btn">Show Interest</button></div>
+    <div class="body"><table id="tTfc"><thead></thead><tbody></tbody></table></div>
+    <p class="hint">Principal Due = Amount Financed &minus; Principal Paid. Interest Paid is income recognized; Interest Due is accrued unpaid interest.</p></div>
+</div>
+
+<div class="page" id="page-qb">
+  <div class="kpis" id="qbKpis"></div>
+  <div class="card"><div class="head"><h2>QuickBooks per-student balances</h2>
+    <p class="csub">From the QuickBooks 10320 register. Click a student for full transaction history with running balance and principal/interest split.</p></div>
+    <div class="body"><table id="tQb"><thead></thead><tbody></tbody></table></div></div>
+</div>
+</div>
+
+<div class="foot">Proprietary and Confidential &middot; AUSOMA Internal Use Only</div>
+
+<div class="modal" id="modal"><div class="panel">
+  <div class="mhead"><button class="close" id="closeM">Close</button><h3 id="mName"></h3><div class="mmeta" id="mMeta"></div></div>
+  <div class="mbody"><div class="sumrow" id="mSum"></div><table id="mTbl"><thead></thead><tbody></tbody></table>
+  <p class="hint" id="mNote" style="padding:10px 0 0;"></p></div>
+</div></div>
+
+<script>
+const TXNS=[{"student": "Nyasia Johnson", "date": "2025-04-11", "type": "draw", "amount": 15649.0, "memo": "TFC Holding Account"}, {"student": "(Unassigned / house)", "date": "2025-04-16", "type": "payment", "amount": 1000.0, "memo": "Cash in Bank - Operating"}, {"student": "Nyasia Johnson", "date": "2025-04-18", "type": "payment", "amount": 1000.0, "memo": "Cash in Bank - Operating"}, {"student": "Moiz Shahzad", "date": "2025-05-01", "type": "draw", "amount": 5760.0, "memo": "TFC Holding Account"}, {"student": "Sheila Bridges", "date": "2025-05-01", "type": "draw", "amount": 3060.0, "memo": "TFC Holding Account"}, {"student": "Aureilya Harris", "date": "2025-05-02", "type": "draw", "amount": 7500.0, "memo": "TFC Holding Account"}, {"student": "Nazir Dilipchand", "date": "2025-05-05", "type": "payment", "amount": 966.34, "memo": "Cash in Bank - Operating"}, {"student": "Nyasia Johnson", "date": "2025-05-20", "type": "payment", "amount": 921.64, "memo": "Cash in Bank - Operating"}, {"student": "Aureilya Harris", "date": "2025-05-20", "type": "payment", "amount": 1875.0, "memo": "Cash in Bank - Operating"}, {"student": "Moiz Shahzad", "date": "2025-05-20", "type": "payment", "amount": 1440.0, "memo": "Cash in Bank - Operating"}, {"student": "Sheila Bridges", "date": "2025-05-20", "type": "payment", "amount": 765.0, "memo": "Cash in Bank - Operating"}, {"student": "Aureilya Harris", "date": "2025-05-20", "type": "adjustment", "amount": 1875.0, "memo": "Cash in Bank - Operating"}, {"student": "Nyasia Johnson", "date": "2025-06-15", "type": "payment", "amount": 883.1, "memo": "Cash in Bank - Operating"}, {"student": "Aureilya Harris", "date": "2025-06-15", "type": "payment", "amount": 1835.0, "memo": "Cash in Bank - Operating"}, {"student": "Moiz Shahzad", "date": "2025-06-15", "type": "payment", "amount": 1440.0, "memo": "Cash in Bank - Operating"}, {"student": "Sheila Bridges", "date": "2025-06-15", "type": "payment", "amount": 765.0, "memo": "Cash in Bank - Operating"}, {"student": "Sheila Bridges", "date": "2025-06-15", "type": "adjustment", "amount": 765.0, "memo": "Cash in Bank - Operating"}, {"student": "Sheila Bridges", "date": "2025-06-25", "type": "payment", "amount": 370.0, "memo": "Cash in Bank - Operating"}, {"student": "Sheila Bridges", "date": "2025-06-30", "type": "payment", "amount": 365.0, "memo": "Cash in Bank - Operating"}, {"student": "Nazir Dilipchand", "date": "2025-07-07", "type": "payment", "amount": 971.95, "memo": "Cash in Bank - Operating"}, {"student": "Aureilya Harris", "date": "2025-07-07", "type": "payment", "amount": 1865.0, "memo": "Cash in Bank - Operating"}, {"student": "Nyasia Johnson", "date": "2025-07-18", "type": "payment", "amount": 886.8, "memo": "Cash in Bank - Operating"}, {"student": "Nazir Dilipchand", "date": "2025-07-18", "type": "payment", "amount": 979.02, "memo": "Cash in Bank - Operating"}, {"student": "Moiz Shahzad", "date": "2025-07-18", "type": "payment", "amount": 1440.0, "memo": "Cash in Bank - Operating"}, {"student": "Sheila Bridges", "date": "2025-07-18", "type": "payment", "amount": 382.5, "memo": "Cash in Bank - Operating"}, {"student": "Sheila Bridges", "date": "2025-08-05", "type": "payment", "amount": 412.5, "memo": "Cash in Bank - Operating"}, {"student": "Nyasia Johnson", "date": "2025-08-19", "type": "draw", "amount": 8200.0, "memo": "TFC Holding Account"}, {"student": "Nyasia Johnson", "date": "2025-08-20", "type": "payment", "amount": 898.02, "memo": "Cash in Bank - Operating"}, {"student": "Nazir Dilipchand", "date": "2025-08-20", "type": "payment", "amount": 582.69, "memo": "Cash in Bank - Operating"}, {"student": "Aureilya Harris", "date": "2025-08-20", "type": "payment", "amount": 1865.0, "memo": "Cash in Bank - Operating"}, {"student": "Moiz Shahzad", "date": "2025-08-20", "type": "payment", "amount": 1440.0, "memo": "Cash in Bank - Operating"}, {"student": "Aureilya Harris", "date": "2025-09-01", "type": "draw", "amount": 7500.0, "memo": "TFC Holding Account"}, {"student": "Moiz Shahzad", "date": "2025-09-01", "type": "draw", "amount": 7200.0, "memo": "TFC Holding Account"}, {"student": "Ayat Mnaather", "date": "2025-09-01", "type": "draw", "amount": 4500.0, "memo": "TFC Holding Account"}, {"student": "Umna Alam", "date": "2025-09-01", "type": "draw", "amount": 6250.0, "memo": "TFC Holding Account"}, {"student": "Nazir Dilipchand", "date": "2025-09-03", "type": "draw", "amount": 4800.0, "memo": "TFC Holding Account"}, {"student": "Aureilya Harris", "date": "2025-09-18", "type": "payment", "amount": 1925.0, "memo": "Cash in Bank - Operating"}, {"student": "Moiz Shahzad", "date": "2025-09-18", "type": "payment", "amount": 1440.0, "memo": "Cash in Bank - Operating"}, {"student": "Umna Alam", "date": "2025-09-18", "type": "payment", "amount": 1000.0, "memo": "Cash in Bank - Operating"}, {"student": "Rafael Seba", "date": "2025-10-02", "type": "draw", "amount": 10250.0, "memo": "TFC Holding Account"}, {"student": "Philip Aka", "date": "2025-10-06", "type": "draw", "amount": 10000.0, "memo": "TFC Holding Account"}, {"student": "Aureilya Harris", "date": "2025-10-20", "type": "payment", "amount": 1865.0, "memo": "Cash in Bank - Operating"}, {"student": "Moiz Shahzad", "date": "2025-10-20", "type": "payment", "amount": 1800.0, "memo": "Cash in Bank - Operating"}, {"student": "Umna Alam", "date": "2025-10-20", "type": "payment", "amount": 979.36, "memo": "Cash in Bank - Operating"}, {"student": "Ayat Mnaather", "date": "2025-10-20", "type": "payment", "amount": 1125.0, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2025-11-05", "type": "payment", "amount": 1500.0, "memo": "Cash in Bank - Operating"}, {"student": "Nyasia Johnson", "date": "2025-11-15", "type": "payment", "amount": 555.77, "memo": "Cash in Bank - Operating"}, {"student": "Aureilya Harris", "date": "2025-11-15", "type": "payment", "amount": 1865.0, "memo": "Cash in Bank - Operating"}, {"student": "Moiz Shahzad", "date": "2025-11-15", "type": "payment", "amount": 1800.0, "memo": "Cash in Bank - Operating"}, {"student": "Umna Alam", "date": "2025-11-15", "type": "payment", "amount": 958.46, "memo": "Cash in Bank - Operating"}, {"student": "Ayat Mnaather", "date": "2025-11-15", "type": "payment", "amount": 1125.0, "memo": "Cash in Bank - Operating"}, {"student": "Rafael Seba", "date": "2025-11-15", "type": "payment", "amount": 1500.0, "memo": "Cash in Bank - Operating"}, {"student": "Aureilya Harris", "date": "2025-12-01", "type": "payment", "amount": 1865.0, "memo": "Cash in Bank - Operating"}, {"student": "Nyasia Johnson", "date": "2025-12-18", "type": "payment", "amount": 831.11, "memo": "Cash in Bank - Operating"}, {"student": "Nazir Dilipchand", "date": "2025-12-18", "type": "payment", "amount": 857.54, "memo": "Cash in Bank - Operating"}, {"student": "Moiz Shahzad", "date": "2025-12-18", "type": "payment", "amount": 1800.0, "memo": "Cash in Bank - Operating"}, {"student": "Sheila Bridges", "date": "2025-12-18", "type": "payment", "amount": 60.0, "memo": "Cash in Bank - Operating"}, {"student": "Umna Alam", "date": "2025-12-18", "type": "payment", "amount": 965.14, "memo": "Cash in Bank - Operating"}, {"student": "Ayat Mnaather", "date": "2025-12-18", "type": "payment", "amount": 1125.0, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2025-12-18", "type": "payment", "amount": 771.02, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2025-12-18", "type": "payment", "amount": 700.0, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2025-12-31", "type": "payment", "amount": 341.88, "memo": "Cash in Bank - Operating"}, {"student": "(Unassigned / house)", "date": "2025-12-31", "type": "adjustment", "amount": 6120.0, "memo": "Cash in Bank - Operating"}, {"student": "Nazir Dilipchand", "date": "2025-12-31", "type": "draw", "amount": 4500.0, "memo": "TFC Holding Account"}, {"student": "Moiz Shahzad", "date": "2026-01-01", "type": "draw", "amount": 7200.0, "memo": "TFC Holding Account"}, {"student": "Nazir Dilipchand", "date": "2026-01-07", "type": "draw", "amount": 4800.0, "memo": "TFC Holding Account"}, {"student": "Nazir Dilipchand", "date": "2026-01-07", "type": "draw", "amount": 4500.0, "memo": "TFC Holding Account"}, {"student": "Nyasia Johnson", "date": "2026-01-12", "type": "draw", "amount": 7200.0, "memo": "TFC Holding Account"}, {"student": "Nyasia Johnson", "date": "2026-01-21", "type": "payment", "amount": 841.22, "memo": "Cash in Bank - Operating"}, {"student": "Moiz Shahzad", "date": "2026-01-21", "type": "payment", "amount": 1800.0, "memo": "Cash in Bank - Operating"}, {"student": "Sheila Bridges", "date": "2026-01-21", "type": "payment", "amount": 705.0, "memo": "Cash in Bank - Operating"}, {"student": "Umna Alam", "date": "2026-01-21", "type": "payment", "amount": 974.49, "memo": "Cash in Bank - Operating"}, {"student": "Ayat Mnaather", "date": "2026-01-21", "type": "payment", "amount": 1125.0, "memo": "Cash in Bank - Operating"}, {"student": "Rafael Seba", "date": "2026-01-21", "type": "payment", "amount": 1286.2, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2026-01-21", "type": "payment", "amount": 1090.0, "memo": "Cash in Bank - Operating"}, {"student": "Nazir Dilipchand", "date": "2026-01-31", "type": "payment", "amount": 1020.72, "memo": "Cash in Bank - Operating"}, {"student": "Aureilya Harris", "date": "2026-01-31", "type": "payment", "amount": 1855.0, "memo": "Cash in Bank - Operating"}, {"student": "Umna Alam", "date": "2026-01-31", "type": "adjustment", "amount": 974.49, "memo": "Cash in Bank - Operating"}, {"student": "(Unassigned / house)", "date": "2026-01-31", "type": "payment", "amount": 700.0, "memo": "Cash in Bank - Operating"}, {"student": "Nataly Echavarria", "date": "2026-01-31", "type": "draw", "amount": 2625.0, "memo": "TFC Holding Account"}, {"student": "Gae Lee", "date": "2026-01-31", "type": "draw", "amount": 10250.0, "memo": "TFC Holding Account"}, {"student": "Anna Mbamalu", "date": "2026-01-31", "type": "draw", "amount": 4000.0, "memo": "TFC Holding Account"}, {"student": "Jeff Agyei", "date": "2026-01-31", "type": "draw", "amount": 4850.0, "memo": "TFC Holding Account"}, {"student": "Ayat Mnaather", "date": "2026-01-31", "type": "draw", "amount": 4850.0, "memo": "TFC Holding Account"}, {"student": "Nazir Dilipchand", "date": "2026-02-19", "type": "payment", "amount": 599.11, "memo": "Cash in Bank - Operating"}, {"student": "Nyasia Johnson", "date": "2026-02-19", "type": "payment", "amount": 833.29, "memo": "Cash in Bank - Operating"}, {"student": "Moiz Shahzad", "date": "2026-02-19", "type": "payment", "amount": 1800.0, "memo": "Cash in Bank - Operating"}, {"student": "Umna Alam", "date": "2026-02-19", "type": "payment", "amount": 955.58, "memo": "Cash in Bank - Operating"}, {"student": "Umna Alam", "date": "2026-02-19", "type": "payment", "amount": 1000.0, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2026-02-19", "type": "payment", "amount": 964.97, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2026-02-19", "type": "payment", "amount": 387.26, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2026-02-19", "type": "payment", "amount": 3.4, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2026-02-19", "type": "payment", "amount": 65.23, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2026-02-19", "type": "payment", "amount": 7.0, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2026-02-19", "type": "payment", "amount": 9.25, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2026-02-19", "type": "payment", "amount": 3.0, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2026-02-19", "type": "payment", "amount": 1.78, "memo": "Cash in Bank - Operating"}, {"student": "Gae Lee", "date": "2026-02-19", "type": "payment", "amount": 1500.0, "memo": "Cash in Bank - Operating"}, {"student": "Aureilya Harris", "date": "2026-02-19", "type": "payment", "amount": 40.0, "memo": "Cash in Bank - Operating"}, {"student": "(TFC house adjustment)", "date": "2026-02-28", "type": "payment", "amount": 58.5, "memo": ""}, {"student": "Nazir Dilipchand", "date": "2026-03-18", "type": "payment", "amount": 523.31, "memo": "Cash in Bank - Operating"}, {"student": "Nyasia Johnson", "date": "2026-03-18", "type": "payment", "amount": 593.52, "memo": "Cash in Bank - Operating"}, {"student": "Moiz Shahzad", "date": "2026-03-18", "type": "payment", "amount": 1800.0, "memo": "Cash in Bank - Operating"}, {"student": "Umna Alam", "date": "2026-03-18", "type": "payment", "amount": 391.46, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2026-03-18", "type": "payment", "amount": 529.0, "memo": "Cash in Bank - Operating"}, {"student": "Gae Lee", "date": "2026-03-18", "type": "payment", "amount": 1431.55, "memo": "Cash in Bank - Operating"}, {"student": "Anna Mbamalu", "date": "2026-03-19", "type": "payment", "amount": 4000.0, "memo": "Cash in Bank - Operating"}, {"student": "Nazir Dilipchand", "date": "2026-04-03", "type": "payment", "amount": 520.0, "memo": "Cash in Bank - Operating"}, {"student": "Rafael Seba", "date": "2026-04-03", "type": "payment", "amount": 1360.65, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2026-04-03", "type": "payment", "amount": 124.01, "memo": "Cash in Bank - Operating"}, {"student": "Jeff Agyei", "date": "2026-04-03", "type": "payment", "amount": 680.0, "memo": "Cash in Bank - Operating"}, {"student": "Nazir Dilipchand", "date": "2026-04-20", "type": "payment", "amount": 536.11, "memo": "Cash in Bank - Operating"}, {"student": "Nazir Dilipchand", "date": "2026-04-20", "type": "payment", "amount": 310.0, "memo": "Cash in Bank - Operating"}, {"student": "Nyasia Johnson", "date": "2026-04-20", "type": "payment", "amount": 809.84, "memo": "Cash in Bank - Operating"}, {"student": "Moiz Shahzad", "date": "2026-04-20", "type": "payment", "amount": 1080.0, "memo": "Cash in Bank - Operating"}, {"student": "Rafael Seba", "date": "2026-04-20", "type": "payment", "amount": 1500.0, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2026-04-20", "type": "payment", "amount": 306.17, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2026-04-20", "type": "payment", "amount": 150.0, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2026-04-20", "type": "payment", "amount": 719.22, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2026-04-20", "type": "payment", "amount": 93.1, "memo": "Cash in Bank - Operating"}, {"student": "Gae Lee", "date": "2026-04-20", "type": "payment", "amount": 1434.55, "memo": "Cash in Bank - Operating"}, {"student": "Nataly Echavarria", "date": "2026-04-20", "type": "payment", "amount": 1980.0, "memo": "Cash in Bank - Operating"}, {"student": "Jessica Blumen", "date": "2026-04-20", "type": "payment", "amount": 852.0, "memo": "Cash in Bank - Operating"}, {"student": "Ayat Mnaather", "date": "2026-05-05", "type": "payment", "amount": 1105.0, "memo": "Cash in Bank - Operating"}, {"student": "Ralph Cadet", "date": "2026-05-05", "type": "payment", "amount": 610.0, "memo": "Cash in Bank - Operating"}, {"student": "Otabek Kushakov", "date": "2026-05-05", "type": "payment", "amount": 500.0, "memo": "Cash in Bank - Operating"}, {"student": "Nazir Dilipchand", "date": "2026-05-20", "type": "payment", "amount": 539.22, "memo": "Cash in Bank - Operating"}, {"student": "Nyasia Johnson", "date": "2026-05-20", "type": "payment", "amount": 795.13, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2026-05-20", "type": "payment", "amount": 391.51, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2026-05-20", "type": "payment", "amount": 474.5, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2026-05-20", "type": "payment", "amount": 159.1, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2026-05-20", "type": "payment", "amount": 36.23, "memo": "Cash in Bank - Operating"}, {"student": "Philip Aka", "date": "2026-05-20", "type": "payment", "amount": 331.17, "memo": "Cash in Bank - Operating"}, {"student": "Anna Mbamalu", "date": "2026-05-20", "type": "payment", "amount": 20.0, "memo": "Cash in Bank - Operating"}, {"student": "Gae Lee", "date": "2026-05-20", "type": "payment", "amount": 1439.4, "memo": "Cash in Bank - Operating"}, {"student": "Jessica Blumen", "date": "2026-05-20", "type": "payment", "amount": 852.0, "memo": "Cash in Bank - Operating"}, {"student": "Jessica Blumen", "date": "2026-05-20", "type": "payment", "amount": 852.0, "memo": "Cash in Bank - Operating"}, {"student": "Mahmood Syed", "date": "2026-05-20", "type": "payment", "amount": 1000.0, "memo": "Cash in Bank - Operating"}, {"student": "Moiz Shahzad", "date": "2026-05-20", "type": "payment", "amount": 1875.0, "memo": "Cash in Bank - Operating"}, {"student": "Anna Mbamalu", "date": "2026-05-20", "type": "payment", "amount": 10.0, "memo": "Cash in Bank - Operating"}];
+const LOANS=[{"student": "Nazir Dilipchand", "tfcId": "A0326-00001", "clientId": "2025000004", "firstPmt": "04/14/2025", "financed": 18600.0, "minPmt": 1000.0, "rate": 9.75, "principalPaid": 9406.01, "interestPaid": 369.54, "principalDue": 9193.99, "interestDue": 49.95, "clientBalance": 9243.94, "lastPmtDt": "05/14/2026", "lastPmtAmt": 599.11, "pastDueDays": "1", "pastDueAmt": 803.49, "critical": ""}, {"student": "Nyasia Johnson", "tfcId": "A0326-00002", "clientId": "2023000006", "firstPmt": "04/14/2025", "financed": 39049.0, "minPmt": 1000.0, "rate": 9.75, "principalPaid": 9016.15, "interestPaid": 1823.85, "principalDue": 30032.85, "interestDue": 189.55, "clientBalance": 30222.4, "lastPmtDt": "05/13/2026", "lastPmtAmt": 1000.0, "pastDueDays": "90", "pastDueAmt": 3160.0, "critical": ""}, {"student": "Aureilya Harris", "tfcId": "A0326-00005", "clientId": "2023000008", "firstPmt": "05/15/2025", "financed": 15000.0, "minPmt": 1875.0, "rate": 0.0, "principalPaid": 14980.0, "interestPaid": 0.0, "principalDue": 20.0, "interestDue": 0.0, "clientBalance": 20.0, "lastPmtDt": "02/04/2026", "lastPmtAmt": 40.0, "pastDueDays": "120", "pastDueAmt": 36.3, "critical": "Pending Default"}, {"student": "Ayat Mnaather", "tfcId": "A0326-00012", "clientId": "2025000020", "firstPmt": "10/01/2025", "financed": 9350.0, "minPmt": 1212.5, "rate": 0.0, "principalPaid": 5605.0, "interestPaid": 0.0, "principalDue": 3745.0, "interestDue": 0.0, "clientBalance": 3745.0, "lastPmtDt": "04/24/2026", "lastPmtAmt": 1125.0, "pastDueDays": "75", "pastDueAmt": 2542.5, "critical": ""}, {"student": "Rafael Seba", "tfcId": "A0326-00013", "clientId": "2025000016", "firstPmt": "11/01/2025", "financed": 10250.0, "minPmt": 1500.0, "rate": 9.75, "principalPaid": 5646.85, "interestPaid": 313.15, "principalDue": 4603.15, "interestDue": 108.51, "clientBalance": 4711.66, "lastPmtDt": "04/01/2026", "lastPmtAmt": 1500.0, "pastDueDays": "103", "pastDueAmt": 4560.0, "critical": "Pending Default"}, {"student": "Philip Aka", "tfcId": "A0326-00014", "clientId": "2025000021", "firstPmt": "11/01/2025", "financed": 20250.0, "minPmt": 1500.0, "rate": 9.75, "principalPaid": 10050.59, "interestPaid": 449.41, "principalDue": 10199.41, "interestDue": 128.31, "clientBalance": 10327.72, "lastPmtDt": "05/01/2026", "lastPmtAmt": 331.17, "pastDueDays": "0", "pastDueAmt": 0.0, "critical": ""}, {"student": "Jeff Agyei", "tfcId": "A0326-00015", "clientId": "2025000026", "firstPmt": "01/26/2026", "financed": 4850.0, "minPmt": 1212.5, "rate": 0.0, "principalPaid": 680.0, "interestPaid": 0.0, "principalDue": 4170.0, "interestDue": 0.0, "clientBalance": 4170.0, "lastPmtDt": "03/17/2026", "lastPmtAmt": 700.0, "pastDueDays": "109", "pastDueAmt": 4190.0, "critical": "Pending Default"}, {"student": "Anna Mbamalu", "tfcId": "A0326-00016", "clientId": "2022000036", "firstPmt": "01/29/2026", "financed": 4750.0, "minPmt": 1187.5, "rate": 0.0, "principalPaid": 4750.0, "interestPaid": 0.0, "principalDue": 0.0, "interestDue": 0.0, "clientBalance": 0.0, "lastPmtDt": "05/08/2026", "lastPmtAmt": 20.0, "pastDueDays": "0", "pastDueAmt": 0.0, "critical": ""}, {"student": "Gae Lee", "tfcId": "A0326-00017", "clientId": "2023000040", "firstPmt": "02/09/2026", "financed": 10250.0, "minPmt": 1500.0, "rate": 9.75, "principalPaid": 5805.5, "interestPaid": 194.5, "principalDue": 4444.5, "interestDue": 53.09, "clientBalance": 4497.59, "lastPmtDt": "05/09/2026", "lastPmtAmt": 1500.0, "pastDueDays": "0", "pastDueAmt": 0.0, "critical": ""}, {"student": "Nataly Echavarria", "tfcId": "A0326-00018", "clientId": "2024000009", "firstPmt": "02/09/2026", "financed": 2625.0, "minPmt": 656.25, "rate": 0.0, "principalPaid": 1980.0, "interestPaid": 0.0, "principalDue": 645.0, "interestDue": 0.0, "clientBalance": 645.0, "lastPmtDt": "04/08/2026", "lastPmtAmt": 2000.0, "pastDueDays": "6", "pastDueAmt": 655.0, "critical": ""}, {"student": "Ralph Cadet", "tfcId": "A0326-00019", "clientId": "2020000044", "firstPmt": "03/25/2026", "financed": 7300.0, "minPmt": 608.33, "rate": 0.0, "principalPaid": 1220.0, "interestPaid": 0.0, "principalDue": 6080.0, "interestDue": 0.0, "clientBalance": 6080.0, "lastPmtDt": "04/17/2026", "lastPmtAmt": 610.0, "pastDueDays": "0", "pastDueAmt": 0.0, "critical": ""}, {"student": "Ashley Holka", "tfcId": "A0326-00020", "clientId": "2024000020", "firstPmt": "03/23/2026", "financed": 5300.0, "minPmt": 1325.0, "rate": 0.0, "principalPaid": 0.0, "interestPaid": 0.0, "principalDue": 5300.0, "interestDue": 0.0, "clientBalance": 5300.0, "lastPmtDt": "", "lastPmtAmt": 0.0, "pastDueDays": "53", "pastDueAmt": 2670.0, "critical": ""}, {"student": "Althea Christian", "tfcId": "A0326-00022", "clientId": "2022000005", "firstPmt": "04/16/2026", "financed": 10460.0, "minPmt": 1743.33, "rate": 0.0, "principalPaid": 1744.0, "interestPaid": 0.0, "principalDue": 8716.0, "interestDue": 0.0, "clientBalance": 8716.0, "lastPmtDt": "04/22/2026", "lastPmtAmt": 1754.0, "pastDueDays": "0", "pastDueAmt": 0.0, "critical": ""}, {"student": "Jessica Blumen", "tfcId": "A0326-00023", "clientId": "2022000030", "firstPmt": "04/15/2026", "financed": 5110.0, "minPmt": 851.66, "rate": 0.0, "principalPaid": 2556.0, "interestPaid": 0.0, "principalDue": 2554.0, "interestDue": 0.0, "clientBalance": 2554.0, "lastPmtDt": "05/15/2026", "lastPmtAmt": 852.0, "pastDueDays": "0", "pastDueAmt": 0.0, "critical": ""}, {"student": "Otabek Kushakov", "tfcId": "A0326-00024", "clientId": "2023000020", "firstPmt": "04/30/2026", "financed": 21000.0, "minPmt": 500.0, "rate": 0.0, "principalPaid": 500.0, "interestPaid": 0.0, "principalDue": 20500.0, "interestDue": 0.0, "clientBalance": 20500.0, "lastPmtDt": "04/30/2026", "lastPmtAmt": 500.0, "pastDueDays": "0", "pastDueAmt": 0.0, "critical": ""}, {"student": "Mahmood Syed", "tfcId": "A0326-00025", "clientId": "2022000020", "firstPmt": "05/15/2026", "financed": 21016.66, "minPmt": 1000.0, "rate": 0.0, "principalPaid": 1000.0, "interestPaid": 0.0, "principalDue": 20016.66, "interestDue": 0.0, "clientBalance": 20016.66, "lastPmtDt": "05/14/2026", "lastPmtAmt": 1000.0, "pastDueDays": "0", "pastDueAmt": 0.0, "critical": ""}, {"student": "Rippon Zaman", "tfcId": "A0326-00026", "clientId": "2024000008", "firstPmt": "05/15/2026", "financed": 5750.0, "minPmt": 1437.5, "rate": 0.0, "principalPaid": 0.0, "interestPaid": 0.0, "principalDue": 5750.0, "interestDue": 0.0, "clientBalance": 0.0, "lastPmtDt": "", "lastPmtAmt": 0.0, "pastDueDays": "0", "pastDueAmt": 0.0, "critical": ""}, {"student": "Moiz Shahzad", "tfcId": "A0326-00027", "clientId": "2023000017", "firstPmt": "05/18/2026", "financed": 7500.0, "minPmt": 1875.0, "rate": 0.0, "principalPaid": 1875.0, "interestPaid": 0.0, "principalDue": 5625.0, "interestDue": 0.0, "clientBalance": 5625.0, "lastPmtDt": "05/15/2026", "lastPmtAmt": 1875.0, "pastDueDays": "0", "pastDueAmt": 0.0, "critical": ""}, {"student": "Basima Shah", "tfcId": "A0326-00028", "clientId": "2020000013", "firstPmt": "10/15/2026", "financed": 16999.99, "minPmt": 400.0, "rate": 0.0, "principalPaid": 0.0, "interestPaid": 0.0, "principalDue": 16999.99, "interestDue": 0.0, "clientBalance": 16999.99, "lastPmtDt": "", "lastPmtAmt": 0.0, "pastDueDays": "0", "pastDueAmt": 0.0, "critical": ""}, {"student": "Abdul Khan", "tfcId": "A0326-00029", "clientId": "2022000033", "firstPmt": "05/25/2026", "financed": 7500.0, "minPmt": 1875.0, "rate": 0.0, "principalPaid": 0.0, "interestPaid": 0.0, "principalDue": 7500.0, "interestDue": 0.0, "clientBalance": 7500.0, "lastPmtDt": "", "lastPmtAmt": 0.0, "pastDueDays": "0", "pastDueAmt": 0.0, "critical": ""}, {"student": "Sehar Jewanee", "tfcId": "A0326-00030", "clientId": "2021000031", "firstPmt": "05/25/2026", "financed": 7500.0, "minPmt": 1875.0, "rate": 0.0, "principalPaid": 0.0, "interestPaid": 0.0, "principalDue": 7500.0, "interestDue": 0.0, "clientBalance": 7500.0, "lastPmtDt": "", "lastPmtAmt": 0.0, "pastDueDays": "0", "pastDueAmt": 0.0, "critical": ""}, {"student": "Tracy Hurlston", "tfcId": "A0326-00031", "clientId": "2023000009", "firstPmt": "05/25/2026", "financed": 5625.0, "minPmt": 1875.0, "rate": 0.0, "principalPaid": 0.0, "interestPaid": 0.0, "principalDue": 5625.0, "interestDue": 0.0, "clientBalance": 5625.0, "lastPmtDt": "", "lastPmtAmt": 0.0, "pastDueDays": "0", "pastDueAmt": 0.0, "critical": ""}, {"student": "Talha Shahzad", "tfcId": "A0326-00032", "clientId": "2022000032", "firstPmt": "05/21/2026", "financed": 7500.0, "minPmt": 1875.0, "rate": 0.0, "principalPaid": 0.0, "interestPaid": 0.0, "principalDue": 7500.0, "interestDue": 0.0, "clientBalance": 7500.0, "lastPmtDt": "", "lastPmtAmt": 0.0, "pastDueDays": "0", "pastDueAmt": 0.0, "critical": ""}, {"student": "Julia George", "tfcId": "A0326-00033", "clientId": "2025000014", "firstPmt": "05/27/2026", "financed": 9500.25, "minPmt": 2375.06, "rate": 0.0, "principalPaid": 0.0, "interestPaid": 0.0, "principalDue": 9500.25, "interestDue": 0.0, "clientBalance": 9500.25, "lastPmtDt": "", "lastPmtAmt": 0.0, "pastDueDays": "0", "pastDueAmt": 0.0, "critical": ""}, {"student": "Rippon Zaman", "tfcId": "A0326-00034", "clientId": "2024000008", "firstPmt": "05/28/2026", "financed": 7500.0, "minPmt": 1875.0, "rate": 0.0, "principalPaid": 0.0, "interestPaid": 0.0, "principalDue": 7500.0, "interestDue": 0.0, "clientBalance": 7500.0, "lastPmtDt": "", "lastPmtAmt": 0.0, "pastDueDays": "0", "pastDueAmt": 0.0, "critical": ""}];
+const PERIODS={"Nazir Dilipchand": [{"s": "2025-04-15", "e": "2025-04-28", "pp": 1000.0, "ip": 0.0}, {"s": "2025-05-15", "e": "2025-05-28", "pp": 966.34, "ip": 33.66}, {"s": "2025-06-15", "e": "2025-06-28", "pp": 971.95, "ip": 28.05}, {"s": "2025-06-28", "e": "2025-07-15", "pp": 979.02, "ip": 20.98}, {"s": "2025-07-28", "e": "2025-08-15", "pp": 582.69, "ip": 16.35}, {"s": "2025-09-15", "e": "2025-12-15", "pp": 857.54, "ip": 42.46}, {"s": "2026-01-15", "e": "2026-01-28", "pp": 1020.72, "ip": 59.35}, {"s": "2026-01-28", "e": "2026-02-15", "pp": 599.11, "ip": 0.0}, {"s": "2026-02-28", "e": "2026-03-15", "pp": 523.31, "ip": 65.8}, {"s": "2026-03-15", "e": "2026-03-28", "pp": 520.0, "ip": 0.0}, {"s": "2026-03-28", "e": "2026-04-15", "pp": 846.11, "ip": 53.0}, {"s": "2026-04-28", "e": "2026-05-15", "pp": 539.22, "ip": 49.89}], "Nyasia Johnson": [{"s": "0000-01-01", "e": "2025-04-15", "pp": 1000.0, "ip": 0.0}, {"s": "2025-04-28", "e": "2025-05-15", "pp": 921.64, "ip": 78.36}, {"s": "2025-05-28", "e": "2025-06-15", "pp": 883.1, "ip": 116.9}, {"s": "2025-06-28", "e": "2025-07-15", "pp": 886.8, "ip": 113.2}, {"s": "2025-07-28", "e": "2025-08-15", "pp": 898.02, "ip": 101.98}, {"s": "2025-08-28", "e": "2025-09-15", "pp": 901.46, "ip": 98.54}, {"s": "2025-09-28", "e": "2025-10-15", "pp": 758.7, "ip": 211.3}, {"s": "2025-10-28", "e": "2025-11-15", "pp": 555.77, "ip": 374.23}, {"s": "2025-11-28", "e": "2025-12-15", "pp": 831.11, "ip": 158.89}, {"s": "2025-12-28", "e": "2026-01-15", "pp": 841.22, "ip": 148.78}, {"s": "2026-01-28", "e": "2026-02-15", "pp": 833.29, "ip": 156.71}, {"s": "2026-02-28", "e": "2026-03-15", "pp": 593.52, "ip": 356.48}, {"s": "2026-03-28", "e": "2026-04-15", "pp": 809.84, "ip": 180.16}, {"s": "2026-04-28", "e": "2026-05-15", "pp": 795.13, "ip": 194.87}], "Yardly Plaisir": [{"s": "2025-04-28", "e": "2025-05-15", "pp": 1437.5, "ip": 0.0}, {"s": "2025-06-15", "e": "2025-06-28", "pp": 1427.5, "ip": 0.0}, {"s": "2025-07-15", "e": "2025-07-28", "pp": 1437.5, "ip": 0.0}, {"s": "2025-07-28", "e": "2025-08-15", "pp": 1427.5, "ip": 0.0}, {"s": "2025-08-28", "e": "2025-09-15", "pp": 20.0, "ip": 0.0}], "Aureilya Harris": [{"s": "2025-04-28", "e": "2025-05-15", "pp": 1875.0, "ip": 0.0}, {"s": "2025-05-28", "e": "2025-06-15", "pp": 1835.0, "ip": 0.0}, {"s": "2025-06-15", "e": "2025-06-28", "pp": 1865.0, "ip": 0.0}, {"s": "2025-07-28", "e": "2025-08-15", "pp": 1865.0, "ip": 0.0}, {"s": "2025-08-28", "e": "2025-09-15", "pp": 1925.0, "ip": 0.0}, {"s": "2025-09-28", "e": "2025-10-15", "pp": 1865.0, "ip": 0.0}, {"s": "2025-10-28", "e": "2025-11-15", "pp": 1865.0, "ip": 0.0}, {"s": "2025-11-15", "e": "2025-11-28", "pp": 1865.0, "ip": 0.0}, {"s": "2026-01-15", "e": "2026-01-28", "pp": 1855.0, "ip": 0.0}, {"s": "2026-01-28", "e": "2026-02-15", "pp": 40.0, "ip": 0.0}], "Moiz Shahzad": [{"s": "2025-04-28", "e": "2025-05-15", "pp": 1440.0, "ip": 0.0}, {"s": "2025-05-28", "e": "2025-06-15", "pp": 1440.0, "ip": 0.0}, {"s": "2025-06-28", "e": "2025-07-15", "pp": 1440.0, "ip": 0.0}, {"s": "2025-07-28", "e": "2025-08-15", "pp": 1440.0, "ip": 0.0}, {"s": "2025-08-28", "e": "2025-09-15", "pp": 1440.0, "ip": 0.0}, {"s": "2025-09-28", "e": "2025-10-15", "pp": 1800.0, "ip": 0.0}, {"s": "2025-10-28", "e": "2025-11-15", "pp": 1800.0, "ip": 0.0}, {"s": "2025-11-28", "e": "2025-12-15", "pp": 1800.0, "ip": 0.0}, {"s": "2025-12-28", "e": "2026-01-15", "pp": 1800.0, "ip": 0.0}, {"s": "2026-01-28", "e": "2026-02-15", "pp": 1800.0, "ip": 0.0}, {"s": "2026-02-28", "e": "2026-03-15", "pp": 1800.0, "ip": 0.0}, {"s": "2026-03-28", "e": "2026-04-15", "pp": 1080.0, "ip": 0.0}], "Christina Jones": [{"s": "2025-04-28", "e": "2025-05-15", "pp": 1562.5, "ip": 0.0}, {"s": "2025-05-28", "e": "2025-06-15", "pp": 1562.5, "ip": 0.0}, {"s": "2025-06-28", "e": "2025-07-15", "pp": 1562.5, "ip": 0.0}, {"s": "2025-07-28", "e": "2025-08-15", "pp": 1562.5, "ip": 0.0}], "Samardeep Karna": [{"s": "2025-04-28", "e": "2025-05-15", "pp": 1800.0, "ip": 0.0}, {"s": "2025-05-28", "e": "2025-06-15", "pp": 1800.0, "ip": 0.0}, {"s": "2025-06-28", "e": "2025-07-15", "pp": 1800.0, "ip": 0.0}], "Sehar Jewanee": [{"s": "0000-01-01", "e": "2025-05-15", "pp": 1437.5, "ip": 0.0}, {"s": "2025-05-28", "e": "2025-06-15", "pp": 1437.5, "ip": 0.0}, {"s": "2025-06-28", "e": "2025-07-15", "pp": 1437.5, "ip": 0.0}, {"s": "2025-07-28", "e": "2025-08-15", "pp": 1437.5, "ip": 0.0}], "Sheila Bridges": [{"s": "0000-01-01", "e": "2025-05-15", "pp": 765.0, "ip": 0.0}, {"s": "2025-05-28", "e": "2025-06-15", "pp": 765.0, "ip": 0.0}, {"s": "2025-06-28", "e": "2025-07-15", "pp": 382.5, "ip": 0.0}, {"s": "2025-07-15", "e": "2025-07-28", "pp": 412.5, "ip": 0.0}, {"s": "2025-11-28", "e": "2025-12-15", "pp": 60.0, "ip": 0.0}, {"s": "2025-12-28", "e": "2026-01-15", "pp": 705.0, "ip": 0.0}], "Umna Alam": [{"s": "0000-01-01", "e": "2025-09-15", "pp": 1000.0, "ip": 0.0}, {"s": "2025-09-28", "e": "2025-10-15", "pp": 979.36, "ip": 20.64}, {"s": "2025-10-28", "e": "2025-11-15", "pp": 958.46, "ip": 41.54}, {"s": "2025-11-28", "e": "2025-12-15", "pp": 965.14, "ip": 34.86}, {"s": "2025-12-28", "e": "2026-01-15", "pp": 974.49, "ip": 25.51}, {"s": "2026-01-28", "e": "2026-02-15", "pp": 1955.58, "ip": 44.42}, {"s": "2026-02-28", "e": "2026-03-15", "pp": 391.46, "ip": 16.38}], "Ayat Mnaather": [{"s": "2025-09-28", "e": "2025-10-15", "pp": 1125.0, "ip": 0.0}, {"s": "2025-10-28", "e": "2025-11-15", "pp": 1125.0, "ip": 0.0}, {"s": "2025-11-28", "e": "2025-12-15", "pp": 1125.0, "ip": 0.0}, {"s": "2025-12-28", "e": "2026-01-15", "pp": 1125.0, "ip": 0.0}, {"s": "2026-04-15", "e": "2026-04-28", "pp": 1105.0, "ip": 0.0}], "Rafael Seba": [{"s": "2025-10-28", "e": "2025-11-15", "pp": 1500.0, "ip": 0.0}, {"s": "2025-12-28", "e": "2026-01-15", "pp": 1286.2, "ip": 193.8}, {"s": "2026-03-15", "e": "2026-03-28", "pp": 1360.65, "ip": 119.35}, {"s": "2026-03-28", "e": "2026-04-15", "pp": 1500.0, "ip": 0.0}], "Philip Aka": [{"s": "0000-01-01", "e": "2025-10-28", "pp": 1500.0, "ip": 0.0}, {"s": "2025-11-28", "e": "2025-12-15", "pp": 1471.02, "ip": 28.98}, {"s": "2025-12-15", "e": "2025-12-28", "pp": 341.88, "ip": 68.12}, {"s": "2025-12-28", "e": "2026-01-15", "pp": 1090.0, "ip": 0.0}, {"s": "2026-01-28", "e": "2026-02-15", "pp": 1441.89, "ip": 58.11}, {"s": "2026-02-15", "e": "2026-02-28", "pp": 891.79, "ip": 79.21}, {"s": "2026-02-28", "e": "2026-03-15", "pp": 529.0, "ip": 0.0}, {"s": "2026-03-15", "e": "2026-03-28", "pp": 124.01, "ip": 107.5}, {"s": "2026-03-28", "e": "2026-04-15", "pp": 1268.49, "ip": 0.0}, {"s": "2026-04-28", "e": "2026-05-15", "pp": 1392.51, "ip": 107.49}], "Jeff Agyei": [{"s": "2026-03-15", "e": "2026-03-28", "pp": 680.0, "ip": 0.0}], "Anna Mbamalu": [{"s": "2026-04-15", "e": "2026-04-28", "pp": 4720.0, "ip": 0.0}, {"s": "2026-04-28", "e": "2026-05-15", "pp": 30.0, "ip": 0.0}], "Gae Lee": [{"s": "2026-01-28", "e": "2026-02-15", "pp": 1500.0, "ip": 0.0}, {"s": "2026-02-28", "e": "2026-03-15", "pp": 1431.55, "ip": 68.45}, {"s": "2026-03-28", "e": "2026-04-15", "pp": 1434.55, "ip": 65.45}, {"s": "2026-04-28", "e": "2026-05-15", "pp": 1439.4, "ip": 60.6}], "Nataly Echavarria": [{"s": "2026-03-28", "e": "2026-04-15", "pp": 1980.0, "ip": 0.0}], "Ralph Cadet": [{"s": "2026-03-15", "e": "2026-03-28", "pp": 610.0, "ip": 0.0}, {"s": "2026-04-15", "e": "2026-04-28", "pp": 610.0, "ip": 0.0}], "Andrea Manson": [{"s": "0000-01-01", "e": "2026-03-28", "pp": 1000.0, "ip": 0.0}], "Althea Christian": [{"s": "2026-04-15", "e": "2026-04-28", "pp": 1744.0, "ip": 0.0}], "Jessica Blumen": [{"s": "0000-01-01", "e": "2026-04-15", "pp": 852.0, "ip": 0.0}, {"s": "2026-04-28", "e": "2026-05-15", "pp": 1704.0, "ip": 0.0}], "Otabek Kushakov": [{"s": "0000-01-01", "e": "2026-04-28", "pp": 500.0, "ip": 0.0}], "Mahmood Syed": [{"s": "2026-04-28", "e": "2026-05-15", "pp": 1000.0, "ip": 0.0}]};
+const META={"qbFile": "10320 Register - 2026-05-29.csv", "tfcFile": "May 15, 2026.xlsx", "lastTfc": "2026-05-15", "lastQb": "2026-05-29 01:20 PM EDT", "built": "2026-05-31 06:12 PM EDT"};
+const r2=n=>Math.round((n+Number.EPSILON)*100)/100;
+const fmt=n=>(n<0?"-$":"$")+Math.abs(n||0).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+const isHouse=n=>n.indexOf("(")===0;
+function lpKey(d){if(!d)return"";const m=String(d).match(/(\d\d)\/(\d\d)\/(\d{4})/);return m?m[3]+m[1]+m[2]:"";}
+function displayName(n){if(!n||n.indexOf("(")===0)return n;const p=String(n).trim().split(/\s+/);if(p.length<2)return n;return p[p.length-1]+", "+p.slice(0,-1).join(" ");}
+function todayKey(){const t=new Date();return t.getFullYear()+String(t.getMonth()+1).padStart(2,"0")+String(t.getDate()).padStart(2,"0");}
+document.getElementById("metaLine").textContent=
+  "Last Update TFC: "+META.lastTfc+"   ·   Last Update QuickBooks: "+META.lastQb+"   ·   Last Build: "+META.built;
+
+function qbAgg(){
+  const m={};
+  for(const t of TXNS){const a=m[t.student]=m[t.student]||{name:t.student,draws:0,payments:0,adj:0,n:0};a.n++;
+    const v=Number(t.amount)||0; if(t.type==="draw")a.draws+=v;else if(t.type==="payment")a.payments+=v;else a.adj+=v;}
+  return Object.values(m).map(a=>({...a,balance:r2(a.draws+a.adj-a.payments)}));
+}
+function tfcAgg(){
+  const m={};
+  for(const l of LOANS){const a=m[l.student]=m[l.student]||{name:l.student,clientId:l.clientId,loans:0,financed:0,monthlyPmt:0,principalPaid:0,interestPaid:0,principalDue:0,interestDue:0,clientBalance:0,pastDueAmt:0,pastDueDays:0,firstPmt:"",firstPmtKey:"",lastPmt:"",lastPmtKey:"",rate:l.rate,critical:""};
+    a.loans++; a.financed+=+l.financed||0; a.monthlyPmt+=+l.minPmt||0; a.principalPaid+=+l.principalPaid||0; a.interestPaid+=+l.interestPaid||0;
+    a.principalDue+=+l.principalDue||0; a.interestDue+=+l.interestDue||0; a.clientBalance+=+l.clientBalance||0;
+    a.pastDueAmt+=+l.pastDueAmt||0; a.pastDueDays=Math.max(a.pastDueDays,parseInt(l.pastDueDays)||0);
+    const fk=lpKey(l.firstPmt); if(fk && (a.firstPmtKey===""||fk<a.firstPmtKey)){a.firstPmtKey=fk;a.firstPmt=l.firstPmt;}
+    const lk=lpKey(l.lastPmtDt); if(lk>a.lastPmtKey){a.lastPmtKey=lk;a.lastPmt=l.lastPmtDt;}
+    if(l.critical)a.critical=l.critical;}
+  return Object.values(m).map(a=>{for(const k in a)if(typeof a[k]==="number")a[k]=r2(a[k]);return a;});
+}
+
+let showInterest=false;   // Interest paid / Interest due columns hidden by default; toggled on TFC tab
+const QB=qbAgg(), TFC=tfcAgg();
+const qbMap=Object.fromEntries(QB.map(r=>[r.name,r]));
+const tfcMap=Object.fromEntries(TFC.map(r=>[r.name,r]));
+const allNames=[...new Set([...QB.map(r=>r.name),...TFC.map(r=>r.name)])];
+
+// interest:principal ratio for a payment, from the TFC statement period containing its date
+function periodRatio(student,dateISO){
+  const ps=PERIODS[student];
+  if(ps){
+    for(const p of ps){ if(dateISO>p.s && dateISO<=p.e){ const t=p.pp+p.ip; return t>0?{ir:p.ip/t,src:"period"}:{ir:0,src:"period"}; } }
+    const last=ps[ps.length-1];
+    if(last && dateISO>last.e){ const t=last.pp+last.ip; return {ir:t>0?last.ip/t:0,src:"latest period"}; }
+  }
+  const t=tfcMap[student];
+  if(t){ const tot=t.principalPaid+t.interestPaid; if(tot>0) return {ir:t.interestPaid/tot,src:"overall avg"}; }
+  return null;
+}
+
+function makeTable(elId, cols, data, opts){
+  opts=opts||{}; let sk=opts.sortKey||cols[0].k, sd=opts.sortDir||1;
+  const el=document.getElementById(elId);
+  function draw(){
+    const col=cols.find(c=>c.k===sk); const get=col&&col.sv?col.sv:(o=>o[sk]);
+    data.sort((a,b)=>{let x=get(a),y=get(b);if(typeof x==="string"||typeof y==="string")return sd*String(x==null?"":x).localeCompare(String(y==null?"":y));return sd*((x||0)-(y||0));});
+    el.querySelector("thead").innerHTML="<tr>"+cols.map(c=>"<th data-k=\""+c.k+"\" class=\""+(sk===c.k?(sd>0?"sa":"sd"):"")+"\">"+c.t+"</th>").join("")+"</tr>";
+    el.querySelectorAll("th").forEach(th=>th.onclick=()=>{const k=th.dataset.k;if(sk===k)sd*=-1;else{sk=k;sd=(cols.find(c=>c.k===k).num?-1:1);}draw();});
+    el.querySelector("tbody").innerHTML=data.map(row=>{
+      const cls=opts.rowClass?opts.rowClass(row):"";
+      return "<tr class=\""+cls+"\" data-name=\""+(row.name||"").replace(/"/g,"&quot;")+"\">"+cols.map(c=>{
+        const v=c.f?c.f(row):row[c.k]; return "<td class=\""+(c.cell?c.cell(row):"")+"\">"+v+"</td>";}).join("")+"</tr>";
+    }).join("");
+    if(opts.onClick) el.querySelectorAll("tbody tr").forEach(tr=>tr.onclick=()=>opts.onClick(tr.dataset.name));
+  }
+  draw();
+}
+
+function buildRecon(){
+  const matched=allNames.filter(n=>qbMap[n]&&tfcMap[n]&&!isHouse(n)).map(n=>{
+    const q=qbMap[n],t=tfcMap[n];const variance=r2(q.balance-t.principalDue);
+    return {name:n,qb:q.balance,tfcDue:t.principalDue,variance,intPaid:t.interestPaid,intDue:t.interestDue,past:t.pastDueAmt};
+  });
+  const tfcOnly=TFC.filter(t=>!qbMap[t.name]).map(t=>({name:t.name,principalDue:t.principalDue,financed:t.financed,intPaid:t.interestPaid,past:t.pastDueAmt}));
+  const qbOnly=QB.filter(q=>!tfcMap[q.name]&&!isHouse(q.name)).map(q=>({name:q.name,balance:q.balance}));
+
+  const qbTotal=r2(QB.reduce((s,r)=>s+r.balance,0));
+  const tfcDueTotal=r2(TFC.reduce((s,r)=>s+r.principalDue,0));
+  const mFlags=matched.filter(m=>Math.abs(m.variance)>1).length;
+  const qFlags=qbOnly.filter(q=>Math.abs(q.balance)>1).length;
+  document.getElementById("reconKpis").innerHTML=[
+    ["QuickBooks balance",fmt(qbTotal),"book of record"],
+    ["TFC principal due",fmt(tfcDueTotal),"source of truth"],
+    ["Aggregate variance",fmt(r2(qbTotal-tfcDueTotal)),"QB − TFC"],
+    ["Items to investigate",String(mFlags+tfcOnly.length+qFlags),mFlags+" matched · "+tfcOnly.length+" TFC-only · "+qFlags+" QB-only"]
+  ].map(k=>"<div class=\"kpi\"><div class=\"lbl\">"+k[0]+"</div><div class=\"val\">"+k[1]+"</div><div class=\"note\">"+k[2]+"</div></div>").join("");
+
+  makeTable("tMatched",[
+    {k:"name",t:"Student",f:r=>displayName(r.name),sv:r=>displayName(r.name)},
+    {k:"qb",t:"QB balance",num:1,f:r=>fmt(r.qb)},
+    {k:"tfcDue",t:"TFC principal due",num:1,f:r=>fmt(r.tfcDue)},
+    {k:"variance",t:"Variance",num:1,f:r=>fmt(r.variance),cell:r=>Math.abs(r.variance)>1?"neg":"pos"},
+    {k:"intPaid",t:"Interest paid",num:1,f:r=>fmt(r.intPaid)},
+    {k:"intDue",t:"Interest due",num:1,f:r=>fmt(r.intDue)},
+    {k:"status",t:"Status",sv:r=>Math.abs(r.variance),f:r=>Math.abs(r.variance)<=1?"<span class=\"pill ok\">Tie</span>":(r.variance>0?"<span class=\"pill warn\">QB high</span>":"<span class=\"pill bad\">QB low / unbooked</span>")}
+  ],matched,{sortKey:"variance",sortDir:1,onClick:showQbStudent,rowClass:()=>"clk"});
+
+  document.getElementById("tfcOnlyH").textContent="In TFC but not booked in QuickBooks — "+tfcOnly.length+" students, "+fmt(r2(tfcOnly.reduce((s,r)=>s+r.principalDue,0)))+" principal due";
+  makeTable("tTfcOnly",[
+    {k:"name",t:"Student",f:r=>displayName(r.name),sv:r=>displayName(r.name)},
+    {k:"financed",t:"Amount financed",num:1,f:r=>fmt(r.financed)},
+    {k:"principalDue",t:"Principal due",num:1,f:r=>fmt(r.principalDue)},
+    {k:"intPaid",t:"Interest paid",num:1,f:r=>fmt(r.intPaid)},
+    {k:"past",t:"Past due",num:1,f:r=>fmt(r.past)},
+    {k:"status",t:"Status",sv:r=>r.principalDue,f:()=>"<span class=\"pill bad\">Unbooked in QB</span>"}
+  ],tfcOnly,{sortKey:"principalDue",sortDir:-1,onClick:showTfcStudent,rowClass:()=>"clk"});
+
+  makeTable("tQbOnly",[
+    {k:"name",t:"Student",f:r=>displayName(r.name),sv:r=>displayName(r.name)},
+    {k:"balance",t:"QB balance",num:1,f:r=>fmt(r.balance),cell:r=>Math.abs(r.balance)>1?"neg":""},
+    {k:"status",t:"Status",sv:r=>Math.abs(r.balance),f:r=>Math.abs(r.balance)<=1?"<span class=\"pill ok\">Closed / $0</span>":"<span class=\"pill warn\">Open in QB, gone from TFC</span>"}
+  ],qbOnly,{sortKey:"balance",sortDir:-1,onClick:showQbStudent,rowClass:()=>"clk"});
+}
+
+function buildTfc(){
+  const fin=r2(TFC.reduce((s,r)=>s+r.financed,0)), pp=r2(TFC.reduce((s,r)=>s+r.principalPaid,0)),
+    ip=r2(TFC.reduce((s,r)=>s+r.interestPaid,0)), past=r2(TFC.reduce((s,r)=>s+r.pastDueAmt,0)),
+    pd=r2(TFC.reduce((s,r)=>s+r.principalDue,0));
+  // Monthly payments: per loan, only count those whose First Pmt Date has arrived
+  const tk=todayKey(); let mpStarted=0, mpAll=0, fut=0;
+  for(const l of LOANS){const amt=+l.minPmt||0; mpAll+=amt; const k=lpKey(l.firstPmt); if(k && k<=tk) mpStarted+=amt; else fut++;}
+  mpStarted=r2(mpStarted); mpAll=r2(mpAll);
+  const mpNote = (mpAll>mpStarted)
+    ? "<span style=\"color:var(--muted)\">"+fmt(mpAll)+" incl. future payments</span>"
+    : "scheduled, all students";
+  const kp=[
+    ["Amount financed",fmt(fin),TFC.length+" students / "+LOANS.length+" loans"],
+    ["Monthly payments",fmt(mpStarted),mpNote],
+    ["Principal paid",fmt(pp),"life-to-date"],
+    ["Principal due",fmt(pd),"outstanding"]
+  ];
+  if(showInterest) kp.push(["Interest paid",fmt(ip),"income recognized"]);
+  kp.push(["Past due",fmt(past),"across all loans"]);
+  document.getElementById("tfcKpis").innerHTML=kp.map(k=>"<div class=\"kpi\"><div class=\"lbl\">"+k[0]+"</div><div class=\"val\">"+k[1]+"</div><div class=\"note\">"+k[2]+"</div></div>").join("");
+  const cols=[
+    {k:"name",t:"Student",f:r=>displayName(r.name)+(r.loans>1?" <span class=\"subt\">("+r.loans+" loans)</span>":""),sv:r=>displayName(r.name)},
+    {k:"financed",t:"Financed",num:1,f:r=>fmt(r.financed)}
+  ];
+  if(showInterest) cols.push({k:"rate",t:"Rate",num:1,f:r=>(r.rate===0||r.rate)?r.rate+"%":"—"});
+  cols.push({k:"principalPaid",t:"Principal paid",num:1,f:r=>fmt(r.principalPaid)});
+  if(showInterest) cols.push({k:"interestPaid",t:"Interest paid",num:1,f:r=>fmt(r.interestPaid)});
+  cols.push({k:"principalDue",t:"Principal due",num:1,f:r=>fmt(r.principalDue)});
+  if(showInterest) cols.push({k:"interestDue",t:"Interest due",num:1,f:r=>fmt(r.interestDue)});
+  cols.push({k:"monthlyPmt",t:"Monthly pmt",num:1,f:r=>r.monthlyPmt?fmt(r.monthlyPmt):"—"});
+  cols.push(
+    {k:"pastDueAmt",t:"Past due",num:1,f:r=>fmt(r.pastDueAmt),cell:r=>r.pastDueAmt>0?"neg":""},
+    {k:"pastDueDays",t:"Days late",num:1,f:r=>r.pastDueDays>0?r.pastDueDays:"—",cell:r=>r.pastDueDays>=90?"neg":(r.pastDueDays>0?"":"")},
+    {k:"firstPmtKey",t:"First payment",f:r=>r.firstPmt||"—"},
+    {k:"lastPmtKey",t:"Last payment",f:r=>r.lastPmt||"—"},
+    {k:"status",t:"Flag",sv:r=>(r.critical?1e9:0)+r.pastDueDays*1e4+r.pastDueAmt,f:r=>r.critical?"<span class=\"pill bad\">"+r.critical+"</span>":(r.pastDueDays>=90?"<span class=\"pill bad\">"+r.pastDueDays+"d late</span>":(r.pastDueAmt>0?"<span class=\"pill warn\">Past due</span>":"<span class=\"pill ok\">Current</span>"))}
+  );
+  makeTable("tTfc",cols,TFC,{sortKey:"principalDue",sortDir:-1,onClick:showTfcStudent,rowClass:()=>"clk"});
+}
+
+function buildQb(){
+  const total=r2(QB.reduce((s,r)=>s+r.balance,0));
+  const studs=QB.filter(r=>!isHouse(r.name));
+  document.getElementById("qbKpis").innerHTML=[
+    ["Total outstanding",fmt(total),QB.length+" accounts"],
+    ["Students owing",String(studs.filter(r=>r.balance>0).length),fmt(r2(studs.filter(r=>r.balance>0).reduce((s,r)=>s+r.balance,0)))],
+    ["Negative / credit",String(QB.filter(r=>r.balance<0).length),"overpaid or unbooked draw"],
+    ["Transactions",String(TXNS.length),"from 10320 register"]
+  ].map(k=>"<div class=\"kpi\"><div class=\"lbl\">"+k[0]+"</div><div class=\"val\">"+k[1]+"</div><div class=\"note\">"+k[2]+"</div></div>").join("");
+  makeTable("tQb",[
+    {k:"name",t:"Student",f:r=>displayName(r.name),sv:r=>displayName(r.name)},
+    {k:"draws",t:"Draws",num:1,f:r=>fmt(r.draws)},
+    {k:"payments",t:"Payments",num:1,f:r=>fmt(r.payments)},
+    {k:"adj",t:"Adj.",num:1,f:r=>r.adj?fmt(r.adj):"—"},
+    {k:"balance",t:"Outstanding",num:1,f:r=>fmt(r.balance),cell:r=>r.balance<0?"neg":""},
+    {k:"status",t:"Status",sv:r=>r.balance,f:r=>isHouse(r.name)?"<span class=\"pill house\">House</span>":r.balance<0?"<span class=\"pill bad\">Credit / no draw</span>":r.balance===0?"<span class=\"pill ok\">Paid</span>":"<span class=\"pill ok\">Outstanding</span>"}
+  ],QB,{sortKey:"balance",sortDir:-1,onClick:showQbStudent,rowClass:()=>"clk"});
+}
+
+function showQbStudent(name){
+  const list=TXNS.filter(t=>t.student===name).slice().sort((a,b)=>a.date<b.date?-1:1);
+  if(!list.length){return;}
+  let run=0,dr=0,pa=0,ad=0,tPrin=0,tInt=0,anyEst=false;
+  const rows=list.map(t=>{
+    const v=+t.amount||0;let s,prinCell="",intCell="";
+    if(t.type==="payment"){
+      s=-v;pa+=v;
+      const rr=periodRatio(name,t.date);
+      if(rr){anyEst=true;const ic=r2(v*rr.ir),pc=r2(v-ic);tPrin+=pc;tInt+=ic;
+        prinCell=fmt(pc); intCell=ic>0?"<span class=\"pos\">"+fmt(ic)+"</span>":fmt(ic);}
+      else{prinCell="<span class=\"subt\">n/a</span>";intCell="<span class=\"subt\">n/a</span>";}
+    } else { if(t.type==="draw"){s=v;dr+=v;} else {s=v;ad+=v;} prinCell="<span class=\"subt\">—</span>";intCell="<span class=\"subt\">—</span>"; }
+    run=r2(run+s);
+    const amtTxt=(s<0?"-$":"$")+Math.abs(v).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});
+    return "<tr><td style=\"text-align:left\">"+t.date+"</td><td style=\"text-align:left\"><span class=\"tag\">"+t.type+"</span></td><td class=\""+(s<0?"neg":"")+"\">"+amtTxt+"</td><td>"+prinCell+"</td><td>"+intCell+"</td><td>"+fmt(run)+"</td></tr>";
+  }).join("");
+  const tfc=tfcMap[name];
+  const sums=[["Draws",fmt(dr)],["Payments",fmt(pa)],["QB balance",fmt(r2(dr+ad-pa))]];
+  if(anyEst){sums.push(["→ Principal (est)",fmt(r2(tPrin))]);sums.push(["→ Interest (est)",fmt(r2(tInt))]);}
+  if(tfc){sums.push(["TFC interest paid",fmt(tfc.interestPaid)]);}
+  document.getElementById("mName").textContent=displayName(name);
+  document.getElementById("mMeta").textContent="QuickBooks · "+list.length+" transactions"+(tfc?" · TFC client "+(tfc.clientId||"—"):"");
+  document.getElementById("mSum").innerHTML=sums.map(x=>"<div>"+x[0]+"<b>"+x[1]+"</b></div>").join("");
+  document.querySelector("#mTbl thead").innerHTML="<tr><th style=\"text-align:left\">Date</th><th style=\"text-align:left\">Type</th><th>Amount</th><th>&rarr; Principal</th><th>&rarr; Interest</th><th>Running</th></tr>";
+  document.querySelector("#mTbl tbody").innerHTML=rows;
+  document.getElementById("mNote").innerHTML = anyEst
+    ? "Principal/interest split is <b>estimated</b>: QB stores only the net payment, so each payment is allocated using the principal:interest ratio TFC applied during the statement period it falls in. TFC interest-paid to date for this student: "+(tfc?fmt(tfc.interestPaid):"n/a")+"."
+    : "QuickBooks records only the net payment; no TFC statement history was available to split principal vs interest for this student.";
+  document.getElementById("modal").style.display="flex";
+}
+function showTfcStudent(name){
+  const list=LOANS.filter(l=>l.student===name);
+  if(!list.length){return;}
+  const t=tfcMap[name];
+  const body=list.map(l=>"<tr><td style=\"text-align:left\">"+l.tfcId+"</td><td style=\"text-align:left\">"+l.firstPmt+"</td><td style=\"text-align:left\">"+(l.lastPmtDt||"—")+"</td><td>"+fmt(+l.financed||0)+"</td><td>"+fmt(+l.principalPaid||0)+"</td><td>"+fmt(+l.interestPaid||0)+"</td><td>"+fmt(+l.principalDue||0)+"</td><td>"+(l.rate||0)+"%</td><td style=\"text-align:left\">"+(l.critical||"")+"</td></tr>").join("");
+  document.getElementById("mName").textContent=displayName(name);
+  document.getElementById("mMeta").textContent="TFC · client ID "+(t.clientId||"—")+" · "+list.length+" loan(s)";
+  document.getElementById("mSum").innerHTML=[["Financed",fmt(t.financed)],["Principal paid",fmt(t.principalPaid)],["Interest paid",fmt(t.interestPaid)],["Principal due",fmt(t.principalDue)],["Interest due",fmt(t.interestDue)],["Past due",fmt(t.pastDueAmt)]].map(s=>"<div>"+s[0]+"<b>"+s[1]+"</b></div>").join("");
+  document.querySelector("#mTbl thead").innerHTML="<tr><th style=\"text-align:left\">TFC loan</th><th style=\"text-align:left\">First pmt</th><th style=\"text-align:left\">Last pmt</th><th>Financed</th><th>Princ. paid</th><th>Int. paid</th><th>Princ. due</th><th>Rate</th><th style=\"text-align:left\">Flag</th></tr>";
+  document.querySelector("#mTbl tbody").innerHTML=body;
+  document.getElementById("mNote").textContent="";
+  document.getElementById("modal").style.display="flex";
+}
+document.getElementById("closeM").onclick=()=>document.getElementById("modal").style.display="none";
+document.getElementById("modal").onclick=e=>{if(e.target.id==="modal")document.getElementById("modal").style.display="none";};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")document.getElementById("modal").style.display="none";});
+
+document.querySelectorAll(".navtab").forEach(tab=>tab.onclick=()=>{
+  document.querySelectorAll(".navtab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  tab.classList.add("active"); document.getElementById("page-"+tab.dataset.p).classList.add("active");
+});
+
+document.getElementById("toggleInt").onclick=function(){
+  showInterest=!showInterest;
+  this.textContent=showInterest?"Hide Interest":"Show Interest";
+  buildTfc();
+};
+
+buildRecon(); buildTfc(); buildQb();
+</script></body></html>
